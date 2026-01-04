@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 
 dotenv.config();
-
 /**
  * Application configuration values
  * Loaded from environment variables with safe defaults
