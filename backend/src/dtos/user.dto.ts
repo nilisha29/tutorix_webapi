@@ -26,4 +26,5 @@ export const LoginUserDTO = z.object({
     email: z.email(),
     password: z.string().min(6)
 });
+
 export type LoginUserDTO = z.infer<typeof LoginUserDTO>;
