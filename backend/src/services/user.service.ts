@@ -20,6 +20,7 @@ export class UserService {
     if (usernameExists) {
       throw new HttpError(403, "Username already in use");
     }
+    
 
     // Hash password
     const hashedPassword = await bcryptjs.hash(data.password, 10);
