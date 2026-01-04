@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { UserType } from "../types/user.type";
 
+
 const UserSchema: Schema = new Schema<UserType>(
   {
     email: {
