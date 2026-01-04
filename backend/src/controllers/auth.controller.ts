@@ -6,6 +6,7 @@ import { CreateUserDTO, LoginUserDTO } from "../dtos/user.dto";
 
 const userService = new UserService();
 
+
 type CreateUserInput = z.infer<typeof CreateUserDTO>;
 type LoginUserInput = z.infer<typeof LoginUserDTO>;
 
