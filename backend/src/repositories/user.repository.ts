@@ -10,6 +10,7 @@ export interface IUserRepository {
     updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
     deleteUser(id: string): Promise<boolean>;
 }
+
 // MongoDb Implementation of UserRepository
 export class UserRepository implements IUserRepository {
     async createUser(userData: Partial<IUser>): Promise<IUser> {
