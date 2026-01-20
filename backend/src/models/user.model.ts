@@ -4,6 +4,11 @@ import { UserType } from "../types/user.type";
 
 const UserSchema: Schema = new Schema<UserType>(
   {
+      fullName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     email: {
       type: String,
       required: true,
@@ -11,18 +16,36 @@ const UserSchema: Schema = new Schema<UserType>(
       lowercase: true,
       trim: true,
     },
-    password: {
-      type: String,
-      required: true,
-    },
-    username: {
+      username: {
       type: String,
       required: true,
       unique: true,
       trim: true,
     },
-    firstName: { type: String },
-    lastName: { type: String },
+    password: {
+      type: String,
+      required: true,
+    },
+      phoneNumber: {
+      type: String,
+      required: false, // optional
+    },
+    address: {
+      type: String,
+      required: false, // optional
+    },
+    profileImage: {
+      type: String,
+      required: false, // only used in Flutter
+    },
+    // username: {
+    //   type: String,
+    //   required: true,
+    //   unique: true,
+    //   trim: true,
+    // },
+    // firstName: { type: String },
+    // lastName: { type: String },
     role: {
       type: String,
       enum: ["user", "admin"],

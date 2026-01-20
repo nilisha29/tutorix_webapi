@@ -27,10 +27,30 @@ export class UserService {
     data.password = hashedPassword;
 
     // Create user
-    const newUser = await userRepository.createUser(data);
+    const newUser = await userRepository.createUser({
+       fullName: data.fullName,
+    email: data.email,
+    username: data.username,
+    password: hashedPassword,
+    phoneNumber: data.phoneNumber,
+    address: data.address,
+    profileImage: data.profileImage,
+    });
     return newUser;
   }
 
+
+//   // Hash password
+// const hashedPassword = await bcryptjs.hash(data.password, 10);
+
+// // Remove confirmPassword before saving
+// const { confirmPassword, ...userData } = data;
+// userData.password = hashedPassword;
+
+// // Create user
+// const newUser = await userRepository.createUser(userData);
+// return newUser;
+//   }
   async loginUser(data: LoginUserDTO) {
     const user = await userRepository.getUserByEmail(data.email);
     if (!user) {
