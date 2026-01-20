@@ -944,6 +944,7 @@ export default function RegisterForm() {
 };
 
 
+
   const inputClass =
     "w-full h-11 rounded-md border px-3 pr-10 text-sm outline-none";
 
