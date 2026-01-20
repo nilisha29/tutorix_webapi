@@ -25,6 +25,7 @@ export const getUserData = async () => {
     }
     return null;
 }
+
 export const clearAuthCookies = async () => {
     const cookieStore = await cookies();
     cookieStore.delete("auth_token");
