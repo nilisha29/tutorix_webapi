@@ -6,6 +6,7 @@ let adminUserController = new AdminUserController();
 
 const router = Router();
 
+
 router.use(authorizedMiddleware); // apply all with middleware
 router.use(adminOnlyMiddleware); // apply all with middleware
 
