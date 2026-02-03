@@ -83,6 +83,7 @@ export async function handleWhoAmI() {
     }
 }
 
+
 export async function handleUpdateProfile(profileData: FormData) {
     try {
         const result = await updateProfile(profileData);
