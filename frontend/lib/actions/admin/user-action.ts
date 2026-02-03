@@ -14,6 +14,7 @@ export const handleCreateUser = async (data: FormData) => {
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: data,
         });
+        
 
         const result = await response.json();
 
