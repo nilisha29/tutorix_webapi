@@ -435,6 +435,7 @@ export default function UpdateUserForm({ user }: { user: any }) {
   console.log("User profileImage:", user?.profileImage);
   console.log("User imageUrl:", user?.imageUrl);
 
+
   
   // Determine the correct image URL
   const getImageUrl = () => {
