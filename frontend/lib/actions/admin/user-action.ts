@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { API } from "@/lib/api/endpoints";
 
+
 export const handleCreateUser = async (data: FormData) => {
     try {
         const cookieStore = await cookies();
@@ -14,7 +15,7 @@ export const handleCreateUser = async (data: FormData) => {
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: data,
         });
-        
+
 
         const result = await response.json();
 
