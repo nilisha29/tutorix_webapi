@@ -7,8 +7,6 @@ import cors from 'cors';
 import path from 'path';
 
 
-
-
 import adminUserRoutes from "./routes/admin/user.route";
 
 
