@@ -437,18 +437,19 @@ export default function UpdateUserForm({ user }: { user: any }) {
 
   // Determine the correct image URL
   const getImageUrl = () => {
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
     if (previewImage) return previewImage; // newly selected image
     if (user?.profileImage) {
       const imageUrl = user.profileImage.startsWith("http")
         ? user.profileImage
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${user.profileImage}`;
+        : `${baseUrl}${user.profileImage}`;
       // Replace Android emulator IP with localhost for web browsers
       return imageUrl.replace("10.0.2.2", "localhost");
     }
     if (user?.imageUrl) {
       const imageUrl = user.imageUrl.startsWith("http")
         ? user.imageUrl
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL}${user.imageUrl}`;
+        : `${baseUrl}${user.imageUrl}`;
       // Replace Android emulator IP with localhost for web browsers
       return imageUrl.replace("10.0.2.2", "localhost");
     }

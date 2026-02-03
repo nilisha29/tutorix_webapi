@@ -378,9 +378,10 @@ export default function DashboardNavbar() {
   const getProfileImageUrl = () => {
     const rawUrl = user?.profileImage || user?.imageUrl;
     if (!rawUrl) return null;
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
     const imageUrl = rawUrl.startsWith("http")
       ? rawUrl
-      : `${process.env.NEXT_PUBLIC_API_BASE_URL}${rawUrl}`;
+      : `${baseUrl}${rawUrl}`;
     return imageUrl.replace("10.0.2.2", "localhost");
   };
 
