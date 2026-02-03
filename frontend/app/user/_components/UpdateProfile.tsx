@@ -435,6 +435,7 @@ export default function UpdateUserForm({ user }: { user: any }) {
   console.log("User profileImage:", user?.profileImage);
   console.log("User imageUrl:", user?.imageUrl);
 
+  
   // Determine the correct image URL
   const getImageUrl = () => {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
