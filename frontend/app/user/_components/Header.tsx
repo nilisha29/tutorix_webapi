@@ -32,6 +32,7 @@ export default function Header() {
                             </span>
                         </Link>
                     </div>
+                    
 
                     {/* Center: Desktop Nav */}
                     <div className="hidden md:flex items-center gap-6 justify-self-center">
