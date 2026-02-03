@@ -328,13 +328,13 @@ export default function LoginForm() {
       throw new Error(res.message || "Login failed");
     }
 
-    // ✅ save token locally
-    // localStorage.setItem("token", res.token);
-       // handle redirect (optional)
-            await checkAuth();
-            setTransition(() => {
-                router.push("/dashboard");
-            });
+    const role = res.data?.role;
+    const targetRoute = role === "admin" ? "/admin" : "/dashboard";
+
+    await checkAuth();
+    setTransition(() => {
+      router.push(targetRoute);
+    });
 
     // router.push("/dashboard");
   } catch (err: any) {

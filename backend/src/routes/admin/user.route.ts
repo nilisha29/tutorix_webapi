@@ -1,0 +1,18 @@
+import { Router } from "express";
+import { authorizedMiddleware, adminOnlyMiddleware } from "../../middlewares/authorization.middleware";
+import { AdminUserController } from "../../controllers/admin/user.controller";
+import { uploads } from "../../middlewares/upload.middleware";
+let adminUserController = new AdminUserController();
+
+const router = Router();
+
+router.use(authorizedMiddleware); // apply all with middleware
+router.use(adminOnlyMiddleware); // apply all with middleware
+
+router.post("/", uploads.single("profileImage"), adminUserController.createUser);
+router.get("/", adminUserController.getAllUsers);
+router.put("/:id", uploads.single("profileImage"), adminUserController.updateUser);
+router.delete("/:id", adminUserController.deleteUser);
+router.get("/:id", adminUserController.getUserById);
+
+export default router;

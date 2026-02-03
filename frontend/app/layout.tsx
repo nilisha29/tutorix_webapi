@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 
+import { ToastContainer } from "react-toastify";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -33,6 +35,8 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+
+         <ToastContainer position="top-right" autoClose={3000} />
         {/* Global Footer */}
       </body>
     </html>
