@@ -5,6 +5,7 @@ const publicRoutes = ['/login', '/register', '/forget-password', '/reset-passwor
 const adminRoutes = ['/admin'];
 const userRoutes = ['/user'];
 
+
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const token = await getAuthToken();
