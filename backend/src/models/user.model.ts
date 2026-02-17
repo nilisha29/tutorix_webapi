@@ -38,6 +38,78 @@ const UserSchema: Schema = new Schema<UserType>(
       type: String,
       required: false, // only used in Flutter
     },
+    subject: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    gradeLevel: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    pricePerHour: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
+    rating: {
+      type: Number,
+      required: false,
+      min: 0,
+      max: 5,
+    },
+    reviewsCount: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
+    about: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    experienceYears: {
+      type: Number,
+      required: false,
+      min: 0,
+    },
+    responseTime: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    languages: {
+      type: [String],
+      default: [],
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
+    education: {
+      type: [String],
+      default: [],
+    },
+    availabilitySlots: {
+      type: [
+        {
+          day: { type: String, required: true },
+          times: { type: [String], default: [] },
+        },
+      ],
+      default: [],
+    },
+    reviews: {
+      type: [
+        {
+          name: { type: String, required: true },
+          detail: { type: String, required: true },
+          quote: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
     // username: {
     //   type: String,
     //   required: true,
@@ -48,7 +120,7 @@ const UserSchema: Schema = new Schema<UserType>(
     // lastName: { type: String },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "admin", "tutor"],
       default: "user",
     },
   },

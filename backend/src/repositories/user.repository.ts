@@ -7,6 +7,8 @@ export interface IUserRepository {
     createUser(userData: Partial<IUser>): Promise<IUser>;
     getUserById(id: string): Promise<IUser | null>;
     getAllUsers(): Promise<IUser[]>;
+    getUsersByRole(role: string, includePassword?: boolean): Promise<IUser[]>;
+    getTutorById(id: string, includePassword?: boolean): Promise<IUser | null>;
     updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
     deleteUser(id: string): Promise<boolean>;
 }
@@ -35,6 +37,20 @@ export class UserRepository implements IUserRepository {
     async getAllUsers(): Promise<IUser[]> {
         const users = await UserModel.find();
         return users;
+    }
+    async getUsersByRole(role: string, includePassword: boolean = false): Promise<IUser[]> {
+        const query = UserModel.find({ role });
+        if (!includePassword) {
+            query.select("-password");
+        }
+        return await query.exec();
+    }
+    async getTutorById(id: string, includePassword: boolean = false): Promise<IUser | null> {
+        const query = UserModel.findOne({ _id: id, role: "tutor" });
+        if (!includePassword) {
+            query.select("-password");
+        }
+        return await query.exec();
     }
     async updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
         // UserModel.updateOne({ _id: id }, { $set: updateData });

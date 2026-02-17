@@ -504,6 +504,45 @@ export class AuthController {
       });
     }
   }
+
+  // =========================
+  // GET TUTORS (PUBLIC)
+  // =========================
+  async getTutors(req: Request, res: Response) {
+    try {
+      const tutors = await userService.getTutors();
+      return res.status(200).json({
+        success: true,
+        message: "Tutors retrieved successfully",
+        data: tutors,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  // =========================
+  // GET TUTOR BY ID (PUBLIC)
+  // =========================
+  async getTutorById(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const tutor = await userService.getTutorById(id);
+      return res.status(200).json({
+        success: true,
+        message: "Tutor retrieved successfully",
+        data: tutor,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
 }
 
 

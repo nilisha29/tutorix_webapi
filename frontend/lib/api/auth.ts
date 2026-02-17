@@ -69,3 +69,23 @@ export const updateProfile = async (profileData: any) => {
       || error.message || 'Update profile failed');
   }
 }
+
+export const getTutors = async () => {
+  try {
+    const response = await axios.get(API.AUTH.TUTORS);
+    return response.data;
+  } catch (error: Error | any) {
+    throw new Error(error.response?.data?.message
+      || error.message || 'Fetch tutors failed');
+  }
+}
+
+export const getTutorById = async (tutorId: string) => {
+  try {
+    const response = await axios.get(`${API.TUTORS.GET_BY_ID}/${tutorId}`);
+    return response.data;
+  } catch (error: Error | any) {
+    throw new Error(error.response?.data?.message
+      || error.message || 'Fetch tutor failed');
+  }
+}

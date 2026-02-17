@@ -11,6 +11,31 @@ export const UserSchema = z.object({
     confirmPassword: z.string().min(6, { message: "Minimum 6 characters" }),
     phoneNumber: z.string().optional(),
     address: z.string().optional(),
+    subject: z.string().optional(),
+    gradeLevel: z.string().optional(),
+    pricePerHour: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.coerce.number().min(0)
+    ).optional(),
+    rating: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.coerce.number().min(0).max(5)
+    ).optional(),
+    reviewsCount: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.coerce.number().min(0)
+    ).optional(),
+    about: z.string().optional(),
+    experienceYears: z.preprocess(
+        (value) => (value === "" ? undefined : value),
+        z.coerce.number().min(0)
+    ).optional(),
+    responseTime: z.string().optional(),
+    languages: z.string().optional(),
+    tags: z.string().optional(),
+    education: z.string().optional(),
+    availabilitySlots: z.string().optional(),
+    reviews: z.string().optional(),
     image: z
         .instanceof(File)
         .optional()

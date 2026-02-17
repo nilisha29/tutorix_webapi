@@ -212,4 +212,23 @@ export class UserService {
     const updatedUser = await userRepository.updateUser(userId, data);
     return updatedUser;
   }
+
+  // =========================
+  // GET TUTORS (PUBLIC)
+  // =========================
+  async getTutors() {
+    const tutors = await userRepository.getUsersByRole("tutor", false);
+    return tutors;
+  }
+
+  // =========================
+  // GET TUTOR BY ID (PUBLIC)
+  // =========================
+  async getTutorById(tutorId: string) {
+    const tutor = await userRepository.getTutorById(tutorId, false);
+    if (!tutor) {
+      throw new HttpError(404, "Tutor not found");
+    }
+    return tutor;
+  }
 }

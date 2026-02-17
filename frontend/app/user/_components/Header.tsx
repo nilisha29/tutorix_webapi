@@ -8,6 +8,7 @@ import { useState } from "react";
 
 const NAV_LINKS = [
     { href: "/", label: "Home" },
+    { href: "/tutors", label: "Tutors" },
     { href: "/about", label: "About" },
 ];
 
@@ -24,19 +25,32 @@ export default function Header() {
                     {/* Left: Logo */}
                     <div className="flex items-center gap-2">
                         <Link href="/" className="flex items-center gap-2 group">
-                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background font-semibold">
-                                M
-                            </span>
+                            <img
+                                src="/images/tutorixlogohome.png"
+                                alt="Tutorix Logo"
+                                className="h-8 w-auto"
+                            />
                             <span className="text-base font-semibold tracking-tight group-hover:opacity-80 transition-opacity">
-                                MyApp
+                                Tutorix
                             </span>
                         </Link>
                     </div>
                     
 
                     {/* Center: Desktop Nav */}
-                    <div className="hidden md:flex items-center gap-6 justify-self-center">
-                        
+                    <div className="hidden md:flex items-center gap-6 justify-self-center text-sm text-slate-700">
+                        {NAV_LINKS.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className={
+                                    "hover:text-slate-900 transition-colors " +
+                                    (isActive(link.href) ? "text-slate-900 font-semibold" : "")
+                                }
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
                     </div>
 
                     {/* Right: Auth + Mobile Toggle */}
@@ -80,6 +94,20 @@ export default function Header() {
                 <div className={"md:hidden overflow-hidden transition-[max-height] duration-300 " + (open ? "max-h-96" : "max-h-0")}>
                     <div className="pb-4 pt-2 border-t border-black/10 dark:border-white/10">
                         <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2">
+                                {NAV_LINKS.map((link) => (
+                                    <Link
+                                        key={link.href}
+                                        href={link.href}
+                                        className={
+                                            "h-9 px-3 inline-flex items-center rounded-md text-sm font-medium border border-black/10 dark:border-white/15 hover:bg-foreground/5 transition-colors " +
+                                            (isActive(link.href) ? "bg-foreground/5" : "")
+                                        }
+                                    >
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </div>
                             <div className="mt-2 flex items-center gap-2">
                                 <button
                                     onClick={handleLogout}

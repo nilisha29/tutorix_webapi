@@ -1,5 +1,5 @@
 "use client";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { UserData, UserSchema } from "@/app/admin/users/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef, useState, useTransition } from "react";
@@ -10,7 +10,7 @@ export default function CreateUserForm() {
 
     const [pending, startTransition] = useTransition();
     const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<UserData>({
-        resolver: zodResolver(UserSchema)
+        resolver: zodResolver(UserSchema) as any
     });
     const [error, setError] = useState<string | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -37,7 +37,7 @@ export default function CreateUserForm() {
         }
     };
 
-    const onSubmit = async (data: UserData) => {
+    const onSubmit: SubmitHandler<UserData> = async (data) => {
         setError(null);
         startTransition(async () => {
             try {

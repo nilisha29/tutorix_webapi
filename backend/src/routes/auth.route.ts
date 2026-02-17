@@ -42,5 +42,6 @@ router.put(
 
 
 router.get("/whoami", authorizedMiddleware, authController.getProfile);
+router.get("/tutors", authController.getTutors);
 
 export default router;

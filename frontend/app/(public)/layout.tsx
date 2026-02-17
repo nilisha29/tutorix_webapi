@@ -2,9 +2,8 @@
 
 export default function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <section>
-        
-            <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <section className="w-full">
+            <main className="w-full">
                 {children}
             </main>
         </section>

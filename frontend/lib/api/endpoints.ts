@@ -7,7 +7,11 @@ export const API = {
 
            WHOAMI: '/api/auth/whoami',
          UPDATEPROFILE: '/api/auth/update-profile',
+            TUTORS: '/api/auth/tutors',
         
+    },
+    TUTORS: {
+        GET_BY_ID: '/api/tutors',
     },
      ADMIN:{
         USER:{

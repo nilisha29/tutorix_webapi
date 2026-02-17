@@ -3,6 +3,7 @@ import bodyParser from 'body-parser';
 import { connectDatabase } from './database/mongodb';
 import { PORT } from './config';
 import authRoutes from "./routes/auth.route";
+import tutorRoutes from "./routes/tutor.route";
 import cors from 'cors';
 import path from 'path';
 
@@ -35,6 +36,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.use('/api/auth', authRoutes);
+app.use('/api/tutors', tutorRoutes);
 
 app.use('/api/admin/users', adminUserRoutes);
 
