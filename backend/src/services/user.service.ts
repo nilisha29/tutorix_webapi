@@ -231,4 +231,50 @@ export class UserService {
     }
     return tutor;
   }
+
+  // =========================
+  // BECOME A TUTOR
+  // =========================
+  async becomeTutor(userId: string, tutorData: any) {
+    const user = await userRepository.getUserById(userId);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+
+    if (user.role === "tutor") {
+      throw new HttpError(400, "User is already a tutor");
+    }
+
+    // Parse arrays if they are JSON strings
+    const parseStringArray = (value: any): string[] => {
+      if (Array.isArray(value)) return value;
+      if (typeof value === "string") {
+        try {
+          const parsed = JSON.parse(value);
+          return Array.isArray(parsed) ? parsed : value.split(",").map((s: string) => s.trim());
+        } catch {
+          return value.split(",").map((s: string) => s.trim());
+        }
+      }
+      return [];
+    };
+
+    // Prepare the update data
+    const updateData: any = {
+      role: "tutor",
+      about: tutorData.about,
+      experienceYears: tutorData.experienceYears,
+      responseTime: tutorData.responseTime,
+      languages: parseStringArray(tutorData.languages),
+      tags: parseStringArray(tutorData.tags),
+      subject: tutorData.subject,
+      gradeLevel: tutorData.gradeLevel,
+      pricePerHour: tutorData.pricePerHour,
+      rating: 5,
+      reviewsCount: 0,
+    };
+
+    const updatedUser = await userRepository.updateUser(userId, updateData);
+    return updatedUser;
+  }
 }

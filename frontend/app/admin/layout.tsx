@@ -54,7 +54,7 @@ export default async function Layout({
           <Sidebar />
         </div>
 
-        <div className="w-full bg-background">
+        <div className="w-full bg-background xl:ml-64">
           {/* Header */}
           <Header />
 

@@ -67,11 +67,11 @@ export default function TutorManagementPage() {
   };
 
   const handleView = (id: string) => {
-    router.push(`/admin/users/${id}`);
+    router.push(`/admin/tutors/${id}`);
   };
 
   const handleEdit = (id: string) => {
-    router.push(`/admin/users/${id}/edit`);
+    router.push(`/admin/tutors/${id}/edit`);
   };
 
   const getProfileImageUrl = (profileImage?: string) => {

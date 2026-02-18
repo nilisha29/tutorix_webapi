@@ -543,6 +543,37 @@ export class AuthController {
       });
     }
   }
+
+  // =========================
+  // BECOME A TUTOR
+  // =========================
+  async becomeTutor(req: Request, res: Response) {
+    try {
+      const userId = req.user?._id;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "User ID not found",
+        });
+      }
+
+      const tutorData = req.body;
+
+      const updatedUser = await userService.becomeTutor(userId, tutorData);
+
+      return res.status(200).json({
+        success: true,
+        message: "Successfully became a tutor",
+        data: updatedUser,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
 }
 
 

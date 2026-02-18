@@ -330,7 +330,10 @@ export default function LoginForm() {
     }
 
     const role = res.data?.role;
-    const targetRoute = role === "admin" ? "/admin" : "/dashboard";
+    const targetRoute = 
+      role === "admin" ? "/admin" : 
+      role === "tutor" ? "/tutor/dashboard" : 
+      "/dashboard";
 
     await checkAuth();
     setTransition(() => {

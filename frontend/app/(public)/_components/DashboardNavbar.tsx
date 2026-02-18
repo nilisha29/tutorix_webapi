@@ -434,7 +434,7 @@ export default function DashboardNavbar() {
               </button>
 
               {open && (
-                <div className="absolute right-0 mt-2 w-40 bg-white shadow-md rounded-md text-sm">
+                <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md text-sm z-50">
                   <Link
                     href="/user/profile"
                     className="block px-4 py-2 hover:bg-gray-100"
@@ -442,6 +442,15 @@ export default function DashboardNavbar() {
                   >
                     My Profile
                   </Link>
+                  {user?.role !== "tutor" && (
+                    <Link
+                      href="/user/become-tutor"
+                      className="block px-4 py-2 hover:bg-gray-100 text-green-600 font-semibold"
+                      onClick={() => setOpen(false)}
+                    >
+                      Become a Tutor
+                    </Link>
+                  )}
                   <button
                     onClick={logout}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"
