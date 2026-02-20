@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from "react";
 import { clearAuthCookies, getAuthToken, getUserData } from "@/lib/cookie";
 import { useRouter } from "next/navigation";
 
@@ -21,25 +21,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const checkAuth = async () => {
+    
+    const checkAuth = useCallback(async () => {
         try {
             const token = await getAuthToken();
-            const user = await getUserData();
-            setUser(user);
+            const userData = await getUserData();
+            
+            // Set user and authenticated BEFORE setting loading to false
+            setUser(userData);
             setIsAuthenticated(!!token);
         } catch (err) {
+            console.error("[AuthContext.checkAuth] Error:", err);
             setIsAuthenticated(false);
             setUser(null);
         } finally {
             setLoading(false);
         }
-    };
-
-    useEffect(() => {
-        checkAuth();
     }, []);
 
-    const logout = async () => {
+    const logout = useCallback(async () => {
         try {
             await clearAuthCookies();
             setIsAuthenticated(false);
@@ -48,10 +48,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
             console.error("Logout failed:", error);
         }
-    }
+    }, [router]);
+
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
+
+
+
+    const contextValue = useMemo(() => ({ 
+        isAuthenticated, 
+        setIsAuthenticated, 
+        user, 
+        setUser, 
+        logout, 
+        loading, 
+        checkAuth 
+    }), [isAuthenticated, user, loading, logout, checkAuth]);
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, user, setUser, logout, loading, checkAuth }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

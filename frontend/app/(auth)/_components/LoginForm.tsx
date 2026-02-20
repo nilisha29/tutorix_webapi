@@ -332,15 +332,13 @@ export default function LoginForm() {
     const role = res.data?.role;
     const targetRoute = 
       role === "admin" ? "/admin" : 
-      role === "tutor" ? "/tutor/dashboard" : 
-      "/dashboard";
+      "/dashboard"; // Always go to user dashboard first, regardless of tutor role
 
     await checkAuth();
     setTransition(() => {
       router.push(targetRoute);
     });
 
-    // router.push("/dashboard");
   } catch (err: any) {
     console.error(err);
     setError(err.message || "Login failed");

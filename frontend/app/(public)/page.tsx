@@ -79,7 +79,7 @@ export default function HomePage() {
 
   return (
     <div className="bg-white">
-      {isAuthenticated ? <DashboardNavbar /> : <Navbar />}
+      <Navbar />
       <HeroSection />
 
       <section className="py-6">

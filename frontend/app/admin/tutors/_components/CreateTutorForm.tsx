@@ -103,13 +103,16 @@ export default function CreateTutorForm() {
           formData.append("responseTime", data.responseTime);
         }
         if (data.languages) {
-          formData.append("languages", data.languages);
+          const languages = Array.isArray(data.languages) ? data.languages.join(", ") : data.languages;
+          formData.append("languages", languages);
         }
         if (data.tags) {
-          formData.append("tags", data.tags);
+          const tags = Array.isArray(data.tags) ? data.tags.join(", ") : data.tags;
+          formData.append("tags", tags);
         }
         if (data.education) {
-          formData.append("education", data.education);
+          const education = Array.isArray(data.education) ? data.education.join("\n") : data.education;
+          formData.append("education", education);
         }
         if (availabilitySlots.length > 0) {
           formData.append("availabilitySlots", JSON.stringify(availabilitySlots));

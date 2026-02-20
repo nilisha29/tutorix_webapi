@@ -67,3 +67,30 @@ export const deleteUser = async (id: string) => {
             || error.message || 'Failed to delete user');
     }
 }
+
+export const updateTutorReview = async (
+    tutorId: string,
+    reviewerId: string,
+    reviewData: { quote?: string; rating?: number }
+) => {
+    try {
+        const response = await axios.put(
+            `${API.ADMIN.USER.UPDATE}${tutorId}/reviews/${reviewerId}`,
+            reviewData
+        );
+        return response.data.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message
+            || error.message || 'Failed to update review');
+    }
+}
+
+export const deleteTutorReview = async (tutorId: string, reviewerId: string) => {
+    try {
+        const response = await axios.delete(`${API.ADMIN.USER.DELETE}${tutorId}/reviews/${reviewerId}`);
+        return response.data.data;
+    } catch (error: Error | any) {
+        throw new Error(error.response?.data?.message
+            || error.message || 'Failed to delete review');
+    }
+}

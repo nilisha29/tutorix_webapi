@@ -34,15 +34,20 @@ router.put(
 )
 
 router.put(
+  "/become-tutor",
+  authorizedMiddleware,
+  uploads.single("profileImage"),
+  authController.becomeTutor
+);
+
+router.put(
   "/:id",
   authorizedMiddleware,
   uploads.single("profileImage"),
   authController.updateUserById
 );
 
-
 router.get("/whoami", authorizedMiddleware, authController.getProfile);
 router.get("/tutors", authController.getTutors);
-router.put("/become-tutor", authorizedMiddleware, authController.becomeTutor);
 
 export default router;

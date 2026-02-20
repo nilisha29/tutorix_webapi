@@ -15,5 +15,7 @@ router.get("/", adminUserController.getAllUsers);
 router.put("/:id", uploads.single("profileImage"), adminUserController.updateUser);
 router.delete("/:id", adminUserController.deleteUser);
 router.get("/:id", adminUserController.getUserById);
+router.put("/:id/reviews/:reviewerId", adminUserController.updateTutorReview);
+router.delete("/:id/reviews/:reviewerId", adminUserController.deleteTutorReview);
 
 export default router;

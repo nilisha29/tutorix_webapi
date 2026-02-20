@@ -8,10 +8,11 @@ import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/app/(public)/_components/Navbar";
+import { handleBecomeTutor } from "@/lib/actions/admin/user-action";
 
 export default function BecomeTutorPage() {
   const router = useRouter();
-  const { user, checkAuth } = useAuth();
+  const { user, checkAuth, setUser } = useAuth();
   const [pending, startTransition] = useTransition();
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<UserEditData>({
     resolver: zodResolver(UserEditSchema) as any,
@@ -31,6 +32,7 @@ export default function BecomeTutorPage() {
       languages: "",
       tags: "",
       education: "",
+      availabilitySlots: "",
     }
   });
 
@@ -112,8 +114,6 @@ export default function BecomeTutorPage() {
     setError(null);
     startTransition(async () => {
       try {
-        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
-        
         const formData = new FormData();
         
         if (data.subject) formData.append('subject', data.subject);
@@ -122,9 +122,18 @@ export default function BecomeTutorPage() {
         if (data.about) formData.append('about', data.about);
         if (data.experienceYears) formData.append('experienceYears', String(data.experienceYears));
         if (data.responseTime) formData.append('responseTime', data.responseTime);
-        if (data.languages) formData.append('languages', data.languages);
-        if (data.tags) formData.append('tags', data.tags);
-        if (data.education) formData.append('education', data.education);
+        if (data.languages) {
+          const languages = Array.isArray(data.languages) ? data.languages.join(", ") : data.languages;
+          formData.append('languages', languages);
+        }
+        if (data.tags) {
+          const tags = Array.isArray(data.tags) ? data.tags.join(", ") : data.tags;
+          formData.append('tags', tags);
+        }
+        if (data.education) {
+          const education = Array.isArray(data.education) ? data.education.join("\n") : data.education;
+          formData.append('education', education);
+        }
         if (availabilitySlots.length > 0) {
           formData.append('availabilitySlots', JSON.stringify(availabilitySlots));
         }
@@ -132,20 +141,24 @@ export default function BecomeTutorPage() {
           formData.append('profileImage', data.image);
         }
 
-        const response = await fetch(`${baseUrl}/api/auth/become-tutor`, {
-          method: "PUT",
-          body: formData,
-          credentials: "include",
-        });
+        const response = await handleBecomeTutor(formData);
 
-        if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.message || "Failed to become a tutor");
+        if (!response.success) {
+          throw new Error(response.message || "Failed to become a tutor");
+        }
+
+        // Update the user in context with new role
+        if (response.data) {
+          setUser({ ...user, ...response.data, role: response.data.role || "tutor" });
         }
 
         await checkAuth();
         toast.success("Welcome to the tutor community! Redirecting to dashboard...");
-        setTimeout(() => router.push("/tutor/dashboard"), 1500);
+        
+        // Refresh the page to show updated navbar with tutor dashboard link
+        setTimeout(() => {
+          window.location.href = "/user/dashboard";
+        }, 1500);
 
       } catch (error: Error | any) {
         const errorMsg = error.message || "Failed to become a tutor";

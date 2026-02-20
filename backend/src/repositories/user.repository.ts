@@ -9,6 +9,23 @@ export interface IUserRepository {
     getAllUsers(): Promise<IUser[]>;
     getUsersByRole(role: string, includePassword?: boolean): Promise<IUser[]>;
     getTutorById(id: string, includePassword?: boolean): Promise<IUser | null>;
+    addTutorReview(
+        tutorId: string,
+        reviewData: {
+            reviewerId: string;
+            name: string;
+            detail: string;
+            profileImage?: string;
+            quote: string;
+            rating: number;
+        }
+    ): Promise<IUser | null>;
+    updateTutorReviewByReviewerId(
+        tutorId: string,
+        reviewerId: string,
+        reviewData: { quote?: string; rating?: number }
+    ): Promise<IUser | null>;
+    deleteTutorReviewByReviewerId(tutorId: string, reviewerId: string): Promise<IUser | null>;
     updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
     deleteUser(id: string): Promise<boolean>;
 }
@@ -51,6 +68,127 @@ export class UserRepository implements IUserRepository {
             query.select("-password");
         }
         return await query.exec();
+    }
+    async addTutorReview(
+        tutorId: string,
+        reviewData: {
+            reviewerId: string;
+            name: string;
+            detail: string;
+            profileImage?: string;
+            quote: string;
+            rating: number;
+        }
+    ): Promise<IUser | null> {
+        const tutor = await UserModel.findOne({ _id: tutorId, role: "tutor" });
+        if (!tutor) {
+            return null;
+        }
+
+        const reviews: any[] = Array.isArray(tutor.reviews) ? [...tutor.reviews] : [];
+        const existingIndex = reviews.findIndex(
+            (review) => String(review?.reviewerId || "") === reviewData.reviewerId
+        );
+
+        const nextReview = {
+            reviewerId: reviewData.reviewerId,
+            name: reviewData.name,
+            detail: reviewData.detail,
+            profileImage: reviewData.profileImage,
+            quote: reviewData.quote,
+            rating: reviewData.rating,
+        };
+
+        if (existingIndex >= 0) {
+            reviews[existingIndex] = nextReview;
+        } else {
+            reviews.push(nextReview);
+        }
+
+        const ratings = reviews
+            .map((review) => Number(review?.rating || 0))
+            .filter((rating) => rating > 0);
+
+        const averageRating = ratings.length
+            ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+            : tutor.rating || 0;
+
+        tutor.reviews = reviews as any;
+        tutor.reviewsCount = reviews.length;
+        tutor.rating = Number(averageRating.toFixed(1));
+
+        await tutor.save();
+        return await UserModel.findOne({ _id: tutorId, role: "tutor" }).select("-password").exec();
+    }
+    async updateTutorReviewByReviewerId(
+        tutorId: string,
+        reviewerId: string,
+        reviewData: { quote?: string; rating?: number }
+    ): Promise<IUser | null> {
+        const tutor = await UserModel.findOne({ _id: tutorId, role: "tutor" });
+        if (!tutor) {
+            return null;
+        }
+
+        const reviews: any[] = Array.isArray(tutor.reviews) ? [...tutor.reviews] : [];
+        const reviewIndex = reviews.findIndex(
+            (review) => String(review?.reviewerId || "") === reviewerId
+        );
+
+        if (reviewIndex < 0) {
+            return null;
+        }
+
+        reviews[reviewIndex] = {
+            ...reviews[reviewIndex],
+            ...(reviewData.quote !== undefined ? { quote: reviewData.quote } : {}),
+            ...(reviewData.rating !== undefined ? { rating: reviewData.rating } : {}),
+        };
+
+        const ratings = reviews
+            .map((review) => Number(review?.rating || 0))
+            .filter((rating) => rating > 0);
+
+        const averageRating = ratings.length
+            ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+            : 0;
+
+        tutor.reviews = reviews as any;
+        tutor.reviewsCount = reviews.length;
+        tutor.rating = Number(averageRating.toFixed(1));
+        await tutor.save();
+
+        return await UserModel.findOne({ _id: tutorId, role: "tutor" }).select("-password").exec();
+    }
+    async deleteTutorReviewByReviewerId(tutorId: string, reviewerId: string): Promise<IUser | null> {
+        const tutor = await UserModel.findOne({ _id: tutorId, role: "tutor" });
+        if (!tutor) {
+            return null;
+        }
+
+        const reviews: any[] = Array.isArray(tutor.reviews) ? [...tutor.reviews] : [];
+        const nextReviews = reviews.filter(
+            (review) => String(review?.reviewerId || "") !== reviewerId
+        );
+
+        if (nextReviews.length === reviews.length) {
+            return null;
+        }
+
+        const ratings = nextReviews
+            .map((review) => Number(review?.rating || 0))
+            .filter((rating) => rating > 0);
+
+        const averageRating = ratings.length
+            ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length
+            : 0;
+
+        tutor.reviews = nextReviews as any;
+        tutor.reviewsCount = nextReviews.length;
+        tutor.rating = Number(averageRating.toFixed(1));
+        await tutor.save();
+
+        return await UserModel.findOne({ _id: tutorId, role: "tutor" }).select("-password").exec();
     }
     async updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null> {
         // UserModel.updateOne({ _id: id }, { $set: updateData });

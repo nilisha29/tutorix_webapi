@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getUserById } from "@/lib/api/admin/user";
+import { getUserById, updateTutorReview, deleteTutorReview } from "@/lib/api/admin/user";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -27,7 +27,14 @@ type Tutor = {
   tags?: string;
   education?: string;
   availabilitySlots?: any[];
-  reviews?: any[];
+  reviews?: {
+    reviewerId?: string;
+    name: string;
+    detail: string;
+    profileImage?: string;
+    quote: string;
+    rating?: number;
+  }[];
 };
 
 export default function TutorDetailPage() {
@@ -38,6 +45,11 @@ export default function TutorDetailPage() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingReviewerId, setEditingReviewerId] = useState<string | null>(null);
+  const [editQuote, setEditQuote] = useState("");
+  const [editRating, setEditRating] = useState(5);
+  const [savingReview, setSavingReview] = useState(false);
+  const [deletingReviewerId, setDeletingReviewerId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTutor = async () => {
@@ -76,6 +88,53 @@ export default function TutorDetailPage() {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+  };
+
+  const startEditReview = (review: NonNullable<Tutor["reviews"]>[number]) => {
+    if (!review.reviewerId) return;
+    setEditingReviewerId(review.reviewerId);
+    setEditQuote(review.quote || "");
+    setEditRating(review.rating || 5);
+  };
+
+  const cancelEditReview = () => {
+    setEditingReviewerId(null);
+    setEditQuote("");
+    setEditRating(5);
+  };
+
+  const submitEditReview = async () => {
+    if (!tutor || !editingReviewerId) return;
+    try {
+      setSavingReview(true);
+      const updatedTutor = await updateTutorReview(tutor._id, editingReviewerId, {
+        quote: editQuote,
+        rating: editRating,
+      });
+      setTutor(updatedTutor);
+      cancelEditReview();
+    } catch (err: any) {
+      alert(err.message || "Failed to update review");
+    } finally {
+      setSavingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewerId?: string) => {
+    if (!tutor || !reviewerId) return;
+    if (!confirm("Are you sure you want to delete this review?")) {
+      return;
+    }
+
+    try {
+      setDeletingReviewerId(reviewerId);
+      const updatedTutor = await deleteTutorReview(tutor._id, reviewerId);
+      setTutor(updatedTutor);
+    } catch (err: any) {
+      alert(err.message || "Failed to delete review");
+    } finally {
+      setDeletingReviewerId(null);
+    }
   };
 
   if (loading) {
@@ -284,6 +343,113 @@ export default function TutorDetailPage() {
               </div>
             ) : (
               <p className="text-gray-500 text-sm">No availability slots added yet.</p>
+            )}
+          </div>
+
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 pb-4 border-b border-gray-200">Reviews</h3>
+            {tutor.reviews && tutor.reviews.length > 0 ? (
+              <div className="space-y-4">
+                {tutor.reviews.map((review, index) => {
+                  const key = review.reviewerId || `${review.name}-${index}`;
+                  const isEditing = editingReviewerId === review.reviewerId;
+                  return (
+                    <div key={key} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          {review.profileImage ? (
+                            <Image
+                              src={getProfileImageUrl(review.profileImage) || ""}
+                              alt={review.name}
+                              width={40}
+                              height={40}
+                              className="h-10 w-10 rounded-full object-cover border border-gray-200"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-semibold">
+                              {review.name?.charAt(0)?.toUpperCase() || "U"}
+                            </div>
+                          )}
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">{review.name}</p>
+                            <p className="text-xs text-gray-500">{review.detail}</p>
+                          </div>
+                        </div>
+                        <div className="flex text-yellow-500">
+                          {Array.from({ length: 5 }).map((_, starIndex) => {
+                            const active = starIndex < (review.rating || 5);
+                            return (
+                              <svg key={starIndex} className={`h-4 w-4 ${active ? "text-yellow-500" : "text-gray-300"}`} viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2l2.7 5.6 6.2.9-4.5 4.4 1.1 6.1L12 16.8 6.5 19l1.1-6.1L3 8.5l6.3-.9L12 2z" />
+                              </svg>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {isEditing ? (
+                        <div className="mt-3 space-y-3">
+                          <textarea
+                            value={editQuote}
+                            onChange={(event) => setEditQuote(event.target.value)}
+                            rows={3}
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                          />
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">Rating:</span>
+                            <select
+                              value={editRating}
+                              onChange={(event) => setEditRating(Number(event.target.value))}
+                              className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+                            >
+                              {[1, 2, 3, 4, 5].map((rating) => (
+                                <option key={rating} value={rating}>{rating}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={submitEditReview}
+                              disabled={savingReview}
+                              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                            >
+                              {savingReview ? "Saving..." : "Save"}
+                            </button>
+                            <button
+                              onClick={cancelEditReview}
+                              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="mt-3 text-sm text-gray-700">{review.quote}</p>
+                          <div className="mt-3 flex items-center gap-2">
+                            <button
+                              onClick={() => startEditReview(review)}
+                              disabled={!review.reviewerId}
+                              className="rounded-md bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteReview(review.reviewerId)}
+                              disabled={!review.reviewerId || deletingReviewerId === review.reviewerId}
+                              className="rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50"
+                            >
+                              {deletingReviewerId === review.reviewerId ? "Deleting..." : "Delete"}
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-sm">No reviews available for this tutor.</p>
             )}
           </div>
         </div>

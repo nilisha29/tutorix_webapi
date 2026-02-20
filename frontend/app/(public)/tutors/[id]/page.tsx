@@ -342,6 +342,8 @@ import Navbar from "../../_components/Navbar";
 import DashboardNavbar from "../../_components/DashboardNavbar";
 import Footer from "../../_components/Footer";
 import { useAuth } from "@/context/AuthContext";
+import { handleSubmitTutorReview } from "@/lib/actions/tutor/review-action";
+import { toast } from "react-toastify";
 
 interface Tutor {
   _id: string;
@@ -360,7 +362,7 @@ interface Tutor {
   tags?: string[];
   education?: string[];
   availabilitySlots?: { day: string; times: string[] }[];
-  reviews?: { name: string; detail: string; quote: string }[];
+  reviews?: { reviewerId?: string; name: string; detail: string; profileImage?: string; quote: string; rating?: number }[];
 }
 
 const getProfileImageUrl = (profileImage?: string) => {
@@ -377,6 +379,15 @@ export default function TutorDetailPage() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [selectedDuration, setSelectedDuration] = useState("60 min");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"esewa" | "khalti" | null>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!tutorId) {
@@ -404,6 +415,174 @@ export default function TutorDetailPage() {
     fetchTutor();
   }, [tutorId]);
 
+  const rating = tutor?.rating !== undefined ? tutor.rating.toFixed(1) : "5.0";
+  const reviewsCount = tutor?.reviewsCount !== undefined ? tutor.reviewsCount : 128;
+  const pricePerHour = tutor?.pricePerHour !== undefined ? tutor.pricePerHour : 45;
+  const subject = tutor?.subject || "Expert Mathematics & Physics";
+  const experienceLabel = tutor?.experienceYears !== undefined
+    ? `${tutor.experienceYears}+ Years`
+    : "Not provided";
+  const responseTime = tutor?.responseTime || "Not provided";
+  const languages = Array.isArray(tutor?.languages) 
+    ? tutor.languages 
+    : typeof tutor?.languages === "string" 
+      ? (tutor.languages as string).split(",").map((l: string) => l.trim()) 
+      : [];
+  const tags = Array.isArray(tutor?.tags) 
+    ? tutor.tags 
+    : typeof tutor?.tags === "string" 
+      ? (tutor.tags as string).split(",").map((t: string) => t.trim()) 
+      : [];
+  const education = Array.isArray(tutor?.education) 
+    ? tutor.education 
+    : typeof tutor?.education === "string" 
+      ? (tutor.education as string).split("\n").map((e: string) => e.trim()).filter((e: string) => e) 
+      : [];
+  const availabilitySlots = tutor?.availabilitySlots || [];
+  const reviews = tutor?.reviews || [];
+
+  const normalizedAvailabilitySlots = availabilitySlots
+    .map((slot) => {
+      const parsed = new Date(slot.day);
+      return {
+        dayLabel: slot.day,
+        parsedDate: Number.isNaN(parsed.getTime()) ? null : parsed,
+        times: (Array.isArray(slot.times) ? slot.times : []).filter((time) => time && time !== "Booked"),
+      };
+    })
+    .filter((slot) => slot.times.length > 0);
+
+  useEffect(() => {
+    if (normalizedAvailabilitySlots.length === 0) {
+      setSelectedSlotIndex(0);
+      setSelectedDate("");
+      setSelectedTime("");
+      return;
+    }
+
+    const safeIndex = Math.min(selectedSlotIndex, normalizedAvailabilitySlots.length - 1);
+    if (safeIndex !== selectedSlotIndex) {
+      setSelectedSlotIndex(safeIndex);
+      return;
+    }
+
+    const activeSlot = normalizedAvailabilitySlots[safeIndex];
+    if (selectedDate !== activeSlot.dayLabel) {
+      setSelectedDate(activeSlot.dayLabel);
+    }
+  }, [normalizedAvailabilitySlots, selectedSlotIndex, selectedDate]);
+
+  const activeAvailabilitySlot = normalizedAvailabilitySlots[selectedSlotIndex] || null;
+  const selectedParsedDate = activeAvailabilitySlot?.parsedDate || null;
+  const monthYearLabel = selectedParsedDate
+    ? selectedParsedDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    : "Select Date";
+
+  const availableTimesForSelectedDate = activeAvailabilitySlot?.times || [];
+
+  useEffect(() => {
+    if (availableTimesForSelectedDate.length === 0) {
+      setSelectedTime("");
+      return;
+    }
+    if (!availableTimesForSelectedDate.includes(selectedTime)) {
+      setSelectedTime(availableTimesForSelectedDate[0]);
+    }
+  }, [availableTimesForSelectedDate, selectedTime]);
+
+  const durationInMinutes = selectedDuration === "30 min" ? 30 : selectedDuration === "90 min" ? 90 : 60;
+  const totalPrice = (pricePerHour * durationInMinutes) / 60;
+  const totalPriceLabel = Number.isInteger(totalPrice) ? `${totalPrice}` : totalPrice.toFixed(2);
+
+  const handleBookAndPay = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login first to book and pay");
+      return;
+    }
+    if (!selectedDate || !selectedTime) {
+      toast.error("Please select date and time");
+      return;
+    }
+    if (!selectedPaymentMethod) {
+      toast.error("Please choose a payment method");
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      const amount = totalPriceLabel;
+      const bookingRef = `TUTORIX-${tutorId}-${Date.now()}`;
+
+      if (selectedPaymentMethod === "esewa") {
+        const esewaLink = process.env.NEXT_PUBLIC_ESEWA_CHECKOUT_LINK;
+        if (!esewaLink) {
+          toast.info("eSewa checkout link not set. Redirecting to eSewa homepage.");
+          window.location.href = "https://esewa.com.np/#/home";
+          return;
+        }
+        const redirectUrl = `${esewaLink}${esewaLink.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      if (selectedPaymentMethod === "khalti") {
+        const khaltiLink = process.env.NEXT_PUBLIC_KHALTI_CHECKOUT_LINK;
+        if (!khaltiLink) {
+          toast.info("Khalti checkout link not set. Redirecting to Khalti homepage.");
+          window.location.href = "https://khalti.com/";
+          return;
+        }
+        const redirectUrl = `${khaltiLink}${khaltiLink.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
+        window.location.href = redirectUrl;
+        return;
+      }
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const onSubmitReview = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to submit a review");
+      return;
+    }
+
+    if (!reviewText.trim()) {
+      toast.error("Please write your review");
+      return;
+    }
+
+    if (!tutorId) {
+      toast.error("Tutor not found");
+      return;
+    }
+
+    try {
+      setSubmittingReview(true);
+      const result = await handleSubmitTutorReview(tutorId, {
+        quote: reviewText.trim(),
+        rating: reviewRating,
+      });
+
+      if (!result.success) {
+        toast.error(result.message || "Failed to submit review");
+        return;
+      }
+
+      if (result.data) {
+        setTutor(result.data);
+      }
+
+      setReviewText("");
+      setReviewRating(5);
+      toast.success("Review submitted");
+    } catch (error: Error | any) {
+      toast.error(error.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   if (loading || error || !tutor) {
     return (
       <div className="bg-gradient-to-b from-blue-50 via-white to-blue-50 min-h-screen">
@@ -419,32 +598,6 @@ export default function TutorDetailPage() {
       </div>
     );
   }
-
-  const rating = tutor.rating !== undefined ? tutor.rating.toFixed(1) : "5.0";
-  const reviewsCount = tutor.reviewsCount !== undefined ? tutor.reviewsCount : 128;
-  const pricePerHour = tutor.pricePerHour !== undefined ? tutor.pricePerHour : 45;
-  const subject = tutor.subject || "Expert Mathematics & Physics";
-  const experienceLabel = tutor.experienceYears !== undefined
-    ? `${tutor.experienceYears}+ Years`
-    : "Not provided";
-  const responseTime = tutor.responseTime || "Not provided";
-  const languages = Array.isArray(tutor.languages) 
-    ? tutor.languages 
-    : typeof tutor.languages === "string" 
-      ? (tutor.languages as string).split(",").map((l: string) => l.trim()) 
-      : [];
-  const tags = Array.isArray(tutor.tags) 
-    ? tutor.tags 
-    : typeof tutor.tags === "string" 
-      ? (tutor.tags as string).split(",").map((t: string) => t.trim()) 
-      : [];
-  const education = Array.isArray(tutor.education) 
-    ? tutor.education 
-    : typeof tutor.education === "string" 
-      ? (tutor.education as string).split("\n").map((e: string) => e.trim()).filter((e: string) => e) 
-      : [];
-  const availabilitySlots = tutor.availabilitySlots || [];
-  const reviews = tutor.reviews || [];
 
   return (
     <div className="bg-gradient-to-b from-blue-50 via-white to-blue-50 min-h-screen">
@@ -555,21 +708,74 @@ export default function TutorDetailPage() {
                   {reviews.length > 0 ? reviews.map((review) => (
                     <div key={`${review.name}-${review.detail}`} className="rounded-xl border border-pink-100 p-4 bg-pink-50 shadow-sm">
                       <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex items-center gap-3">
+                          {review.profileImage ? (
+                            <img
+                              src={getProfileImageUrl(review.profileImage) || ""}
+                              alt={review.name}
+                              className="h-10 w-10 rounded-full object-cover border border-pink-200"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-slate-300 text-white flex items-center justify-center font-semibold">
+                              {review.name?.charAt(0)?.toUpperCase() || "U"}
+                            </div>
+                          )}
+                          <div>
                           <p className="text-sm font-semibold text-slate-900">{review.name}</p>
                           <p className="text-xs text-slate-500">{review.detail}</p>
+                          </div>
                         </div>
                         <div className="flex text-yellow-500">
-                          {Array.from({ length: 5 }).map((_, index) => (
-                            <svg key={index} className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                          {Array.from({ length: 5 }).map((_, index) => {
+                            const active = index < (review.rating || 5);
+                            return (
+                            <svg key={index} className={`h-4 w-4 ${active ? "text-yellow-500" : "text-slate-300"}`} viewBox="0 0 24 24" fill="currentColor">
                               <path d="M12 2l2.7 5.6 6.2.9-4.5 4.4 1.1 6.1L12 16.8 6.5 19l1.1-6.1L3 8.5l6.3-.9L12 2z" />
                             </svg>
-                          ))}
+                          )})}
                         </div>
                       </div>
                       <p className="mt-3 text-sm text-slate-700">{review.quote}</p>
                     </div>
                   )) : <div className="text-sm text-slate-500">No reviews yet.</div>}
+                </div>
+
+                <div className="mt-6 rounded-xl border border-pink-200 bg-white p-4">
+                  <h3 className="text-sm font-semibold text-slate-900">Write a Review</h3>
+                  <div className="mt-3 flex items-center gap-2">
+                    {Array.from({ length: 5 }).map((_, index) => {
+                      const starValue = index + 1;
+                      const active = starValue <= reviewRating;
+                      return (
+                        <button
+                          key={starValue}
+                          type="button"
+                          onClick={() => setReviewRating(starValue)}
+                          className={active ? "text-yellow-500" : "text-slate-300"}
+                          aria-label={`Rate ${starValue} star${starValue > 1 ? "s" : ""}`}
+                        >
+                          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2l2.7 5.6 6.2.9-4.5 4.4 1.1 6.1L12 16.8 6.5 19l1.1-6.1L3 8.5l6.3-.9L12 2z" />
+                          </svg>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <textarea
+                    value={reviewText}
+                    onChange={(event) => setReviewText(event.target.value)}
+                    placeholder="Share your learning experience with this tutor"
+                    className="mt-3 w-full rounded-lg border border-slate-200 p-3 text-sm text-slate-700 focus:border-blue-300 focus:outline-none"
+                    rows={4}
+                  />
+                  <button
+                    type="button"
+                    onClick={onSubmitReview}
+                    disabled={submittingReview}
+                    className="mt-3 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+                  >
+                    {submittingReview ? "Submitting..." : "Submit Review"}
+                  </button>
                 </div>
               </div>
 
@@ -577,28 +783,157 @@ export default function TutorDetailPage() {
 
             {/* Sidebar */}
             <aside className="space-y-6">
-              <div className="rounded-2xl bg-yellow-50 p-6 border border-yellow-200 shadow-lg hover:shadow-xl transition duration-300">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-semibold text-slate-900">${pricePerHour}</h3>
-                  <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded-full">Money-back guarantee</span>
-                </div>
-                <div className="mt-4 space-y-3 text-sm text-slate-700">
-                  <div className="flex items-center justify-between">
-                    <span>Trial lesson (30 min)</span>
-                    <span className="text-green-600 font-semibold">FREE</span>
+              <div className="rounded-2xl bg-white p-6 border border-slate-200 shadow-lg">
+                <h3 className="text-4xl font-bold text-slate-900">${pricePerHour} <span className="text-2xl font-medium text-slate-600">/ hour</span></h3>
+
+                <div className="mt-6 border-t border-slate-200 pt-5">
+                  <h4 className="text-2xl font-semibold text-slate-900">Select Date</h4>
+                  <div className="mt-4 rounded-2xl border border-slate-200 p-4">
+                    <div className="mb-4 flex items-center justify-between text-sm font-medium text-slate-700">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSlotIndex((prev) => Math.max(prev - 1, 0))}
+                        disabled={selectedSlotIndex === 0}
+                        className="text-slate-500"
+                      >
+                        &lt;
+                      </button>
+                      <span>{monthYearLabel}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedSlotIndex((prev) => Math.min(prev + 1, Math.max(normalizedAvailabilitySlots.length - 1, 0)))
+                        }
+                        disabled={selectedSlotIndex >= normalizedAvailabilitySlots.length - 1}
+                        className="text-slate-500"
+                      >
+                        &gt;
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-2 text-center text-xs text-slate-500">
+                      {normalizedAvailabilitySlots.map((slot, index) => {
+                        const isSelected = index === selectedSlotIndex;
+                        return (
+                        <div key={`${slot.dayLabel}-${index}`}>
+                          <div className="mb-2 font-semibold">
+                            {slot.parsedDate
+                              ? slot.parsedDate.toLocaleDateString("en-US", { weekday: "short" })
+                              : `Slot ${index + 1}`}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedSlotIndex(index)}
+                            className={isSelected ? "h-8 w-8 rounded-full bg-sky-600 text-white" : "h-8 w-8 rounded-full text-slate-700 hover:bg-sky-100"}
+                          >
+                            {slot.parsedDate ? slot.parsedDate.getDate() : index + 1}
+                          </button>
+                        </div>
+                      )})}
+                      {normalizedAvailabilitySlots.length === 0 && (
+                        <div className="col-span-7 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                          No available dates from tutor availability slots
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span>Selected: Oct 24, 09:00 AM</span>
-                    <span className="text-slate-900 font-semibold">${pricePerHour}.00</span>
+                </div>
+
+                <div className="mt-6">
+                  <h4 className="text-2xl font-semibold text-slate-900">Select Time</h4>
+                  <div className="mt-3 grid grid-cols-3 gap-3">
+                    {availableTimesForSelectedDate.map((time) => (
+                      <button
+                        key={time}
+                        type="button"
+                        onClick={() => setSelectedTime(time)}
+                        className={selectedTime === time ? "rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white" : "rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"}
+                      >
+                        {time}
+                      </button>
+                    ))}
+                    {availableTimesForSelectedDate.length === 0 && (
+                      <div className="col-span-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500">
+                        No available times for selected date
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between text-sm font-semibold">
-                  <span>Total</span>
-                  <span>${pricePerHour}.00</span>
+
+                <div className="mt-6">
+                  <h4 className="text-2xl font-semibold text-slate-900">Select Duration</h4>
+                  <div className="mt-3 grid grid-cols-3 gap-3">
+                    {["30 min", "60 min", "90 min"].map((duration) => (
+                      <button
+                        key={duration}
+                        type="button"
+                        onClick={() => setSelectedDuration(duration)}
+                        className={selectedDuration === duration ? "rounded-xl bg-sky-600 px-3 py-2 text-sm font-semibold text-white" : "rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"}
+                      >
+                        {duration}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <button className="mt-5 w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 transition shadow-md">
-                  Book Tutor
+
+                <div className="mt-6">
+                  <h4 className="text-2xl font-semibold text-slate-900">Payment Method</h4>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPaymentMethod("esewa")}
+                      className={selectedPaymentMethod === "esewa" ? "rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white" : "rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"}
+                    >
+                      eSewa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPaymentMethod("khalti")}
+                      className={selectedPaymentMethod === "khalti" ? "rounded-xl bg-purple-600 px-3 py-2 text-sm font-semibold text-white" : "rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"}
+                    >
+                      Khalti
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 border-t border-slate-200 pt-5">
+                  <h4 className="text-2xl font-semibold text-slate-900">Booking Summary</h4>
+                  <div className="mt-3 space-y-2 text-base text-slate-700">
+                    <div className="flex items-center justify-between">
+                      <span>Date:</span>
+                      <span className="font-semibold">
+                        {selectedParsedDate
+                          ? selectedParsedDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+                          : selectedDate || "Not selected"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Time:</span>
+                      <span className="font-semibold">{selectedTime || "Not selected"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Duration:</span>
+                      <span className="font-semibold">{selectedDuration}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Pay Via:</span>
+                      <span className="font-semibold">{selectedPaymentMethod === "esewa" ? "eSewa" : selectedPaymentMethod === "khalti" ? "Khalti" : "Not selected"}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>Total:</span>
+                      <span className="font-semibold">${totalPriceLabel}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleBookAndPay}
+                  disabled={processingPayment}
+                  className="mt-6 w-full rounded-xl bg-emerald-600 text-white py-3 text-2xl font-semibold hover:bg-emerald-700 transition shadow-md disabled:opacity-60"
+                >
+                  {processingPayment ? "Redirecting..." : "Book & Pay"}
                 </button>
+
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <button className="rounded-lg border border-slate-200 py-2 text-slate-600 hover:bg-slate-50">Message</button>
                   <button className="rounded-lg border border-slate-200 py-2 text-slate-600 hover:bg-slate-50">Save</button>

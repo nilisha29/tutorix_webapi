@@ -229,6 +229,33 @@ export class UserService {
     if (!tutor) {
       throw new HttpError(404, "Tutor not found");
     }
+
+    if (Array.isArray((tutor as any).reviews) && (tutor as any).reviews.length > 0) {
+      const hydratedReviews = await Promise.all(
+        (tutor as any).reviews.map(async (review: any) => {
+          if (review?.profileImage) {
+            return review;
+          }
+          const reviewerId = review?.reviewerId;
+          if (!reviewerId) {
+            return review;
+          }
+          const reviewer = await userRepository.getUserById(String(reviewerId));
+          if (!reviewer) {
+            return review;
+          }
+          return {
+            ...review,
+            name: review?.name || reviewer.fullName || reviewer.username || "User",
+            detail: review?.detail || reviewer.username || reviewer.fullName || "",
+            profileImage: reviewer.profileImage,
+          };
+        })
+      );
+
+      (tutor as any).reviews = hydratedReviews;
+    }
+
     return tutor;
   }
 
@@ -245,15 +272,53 @@ export class UserService {
       throw new HttpError(400, "User is already a tutor");
     }
 
-    // Parse arrays if they are JSON strings
-    const parseStringArray = (value: any): string[] => {
-      if (Array.isArray(value)) return value;
+    // Helper to convert strings to arrays or pass through existing arrays
+    const parseStringArray = (value: any, separator: RegExp = /,/): string[] => {
+      console.log("[becomeTutor parseStringArray] Input:", { value, type: typeof value });
+      if (Array.isArray(value)) {
+        console.log("[becomeTutor parseStringArray] Already array:", value);
+        return value;
+      }
       if (typeof value === "string") {
+        if (!value.trim()) return [];
+        const result = value.split(separator).map(s => s.trim()).filter(Boolean);
+        console.log("[becomeTutor parseStringArray] Converted to array:", result);
+        return result;
+      }
+      return [];
+    };
+
+    const parseEducationArray = (value: any): string[] => {
+      console.log("[becomeTutor parseEducationArray] Input:", { value, type: typeof value });
+      if (Array.isArray(value)) {
+        console.log("[becomeTutor parseEducationArray] Already array:", value);
+        return value;
+      }
+      if (typeof value === "string") {
+        if (!value.trim()) return [];
+        const result = value.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+        console.log("[becomeTutor parseEducationArray] Converted to array:", result);
+        return result;
+      }
+      return [];
+    };
+
+    const parseAvailabilitySlots = (value: any): any[] => {
+      console.log("[becomeTutor parseAvailabilitySlots] Input:", { value, type: typeof value });
+      if (Array.isArray(value)) {
+        console.log("[becomeTutor parseAvailabilitySlots] Already array:", value);
+        return value;
+      }
+      if (typeof value === "string") {
+        if (!value.trim()) return [];
         try {
           const parsed = JSON.parse(value);
-          return Array.isArray(parsed) ? parsed : value.split(",").map((s: string) => s.trim());
-        } catch {
-          return value.split(",").map((s: string) => s.trim());
+          if (Array.isArray(parsed)) {
+            console.log("[becomeTutor parseAvailabilitySlots] Parsed JSON:", parsed);
+            return parsed;
+          }
+        } catch (e) {
+          console.log("[becomeTutor parseAvailabilitySlots] JSON parse failed:", e);
         }
       }
       return [];
@@ -265,8 +330,10 @@ export class UserService {
       about: tutorData.about,
       experienceYears: tutorData.experienceYears,
       responseTime: tutorData.responseTime,
-      languages: parseStringArray(tutorData.languages),
-      tags: parseStringArray(tutorData.tags),
+      languages: parseStringArray(tutorData.languages, /,/),
+      tags: parseStringArray(tutorData.tags, /,/),
+      education: parseEducationArray(tutorData.education),
+      availabilitySlots: parseAvailabilitySlots(tutorData.availabilitySlots),
       subject: tutorData.subject,
       gradeLevel: tutorData.gradeLevel,
       pricePerHour: tutorData.pricePerHour,
@@ -276,5 +343,40 @@ export class UserService {
 
     const updatedUser = await userRepository.updateUser(userId, updateData);
     return updatedUser;
+  }
+
+  async addTutorReview(
+    tutorId: string,
+    reviewerId: string,
+    reviewData: { quote: string; rating: number }
+  ) {
+    const tutor = await userRepository.getTutorById(tutorId, false);
+    if (!tutor) {
+      throw new HttpError(404, "Tutor not found");
+    }
+
+    const reviewer = await userRepository.getUserById(reviewerId);
+    if (!reviewer) {
+      throw new HttpError(404, "User not found");
+    }
+
+    if (String(tutor._id) === String(reviewer._id)) {
+      throw new HttpError(400, "You cannot review yourself");
+    }
+
+    const savedTutor = await userRepository.addTutorReview(tutorId, {
+      reviewerId: String(reviewer._id),
+      name: reviewer.fullName || reviewer.username || "User",
+      detail: `${reviewer.username || reviewer.fullName}`,
+      profileImage: reviewer.profileImage,
+      quote: reviewData.quote,
+      rating: reviewData.rating,
+    });
+
+    if (!savedTutor) {
+      throw new HttpError(404, "Tutor not found");
+    }
+
+    return savedTutor;
   }
 }

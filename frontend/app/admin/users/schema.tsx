@@ -31,11 +31,12 @@ export const UserSchema = z.object({
         z.coerce.number().min(0)
     ).optional(),
     responseTime: z.string().optional(),
-    languages: z.string().optional(),
-    tags: z.string().optional(),
-    education: z.string().optional(),
-    availabilitySlots: z.string().optional(),
+    languages: z.string().or(z.array(z.string())).optional(),
+    tags: z.string().or(z.array(z.string())).optional(),
+    education: z.string().or(z.array(z.string())).optional(),
+    availabilitySlots: z.string().or(z.array(z.any())).optional(),
     reviews: z.string().optional(),
+    role: z.enum(["admin", "user", "tutor"]).optional(),
     image: z
         .instanceof(File)
         .optional()

@@ -36,12 +36,25 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const { logout, user, isAuthenticated } = useAuth();
+  const [renderKey, setRenderKey] = useState(0);
+  const authContext = useAuth();
+  const { logout, user, isAuthenticated, loading } = authContext;
+
+
+
+  // Log when user data arrives from context
+  useEffect(() => {
+    console.log("[Navbar useEffect] Dependencies changed. user=", user, "user?.role=", user?.role);
+    if (user?.role) {
+      console.log("[Navbar useEffect] GOT USER ROLE:", user.role);
+      setRenderKey(prev => prev + 1);
+    }
+  }, [user, loading]);
 
   const getProfileImageUrl = () => {
     const rawUrl = user?.profileImage || user?.imageUrl;
@@ -97,7 +110,8 @@ export default function Navbar() {
               </button>
 
               {open && (
-                <div className="absolute right-0 mt-2 w-40 bg-white shadow-md rounded-md text-sm">
+                <div key={renderKey} className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md text-sm z-50">
+                  
                   <Link
                     href="/user/profile"
                     className="block px-4 py-2 hover:bg-gray-100"
@@ -105,6 +119,41 @@ export default function Navbar() {
                   >
                     My Profile
                   </Link>
+                  
+                  {/* Show Tutor Dashboard if user is a tutor */}
+                  {(() => {
+                    const isTutor = user && user.role === "tutor";
+                    if (isTutor) {
+                      return (
+                        <Link
+                          href="/tutor/dashboard"
+                          className="block px-4 py-2 hover:bg-gray-100 text-green-600 font-semibold"
+                          onClick={() => setOpen(false)}
+                        >
+                          ✓ Tutor Dashboard
+                        </Link>
+                      );
+                    }
+                    return null;
+                  })()}
+                  
+                  {/* Show Become a Tutor if user is NOT a tutor */}
+                  {(() => {
+                    const isNotTutor = user && user.role !== "tutor";
+                    if (isNotTutor) {
+                      return (
+                        <Link
+                          href="/user/become-tutor"
+                          className="block px-4 py-2 hover:bg-gray-100 text-blue-600"
+                          onClick={() => setOpen(false)}
+                        >
+                          Become a Tutor
+                        </Link>
+                      );
+                    }
+                    return null;
+                  })()}
+                  
                   <button
                     onClick={logout}
                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-500"

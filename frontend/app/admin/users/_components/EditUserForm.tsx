@@ -32,9 +32,9 @@ export default function EditUserForm({ userId, initialData }: EditUserFormProps)
       about: initialData?.about || "",
       experienceYears: initialData?.experienceYears || "",
       responseTime: initialData?.responseTime || "",
-      languages: initialData?.languages || "",
-      tags: initialData?.tags || "",
-      education: initialData?.education || "",
+      languages: Array.isArray(initialData?.languages) ? initialData.languages.join(", ") : (initialData?.languages || ""),
+      tags: Array.isArray(initialData?.tags) ? initialData.tags.join(", ") : (initialData?.tags || ""),
+      education: Array.isArray(initialData?.education) ? initialData.education.join("\n") : (initialData?.education || ""),
     }
   });
   const [error, setError] = useState<string | null>(null);
@@ -87,11 +87,23 @@ export default function EditUserForm({ userId, initialData }: EditUserFormProps)
         if (data.about) formData.append('about', data.about);
         if (data.experienceYears) formData.append('experienceYears', String(data.experienceYears));
         if (data.responseTime) formData.append('responseTime', data.responseTime);
-        if (data.languages) formData.append('languages', data.languages);
-        if (data.tags) formData.append('tags', data.tags);
-        if (data.education) formData.append('education', data.education);
+        if (data.languages) {
+          const languages = Array.isArray(data.languages) ? data.languages.join(", ") : data.languages;
+          formData.append('languages', languages);
+        }
+        if (data.tags) {
+          const tags = Array.isArray(data.tags) ? data.tags.join(", ") : data.tags;
+          formData.append('tags', tags);
+        }
+        if (data.education) {
+          const education = Array.isArray(data.education) ? data.education.join("\n") : data.education;
+          formData.append('education', education);
+        }
         if (data.image) {
           formData.append('profileImage', data.image);
+        }
+        if (initialData?.role) {
+          formData.append('role', initialData.role);
         }
 
         const response = await handleUpdateUser(userId, formData);

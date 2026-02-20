@@ -308,6 +308,8 @@ import {
   CreateUserDTO,
   LoginUserDTO,
   UpdateUserDto,
+  BecomeTutorDTO,
+  AddTutorReviewDTO,
 } from "../dtos/user.dto";
 
 const userService = new UserService();
@@ -463,6 +465,67 @@ export class AuthController {
   }
 
   // =========================
+  // BECOME TUTOR
+  // =========================
+  async becomeTutor(req: Request, res: Response) {
+    try {
+      const userId = req.user?._id;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: "User ID not found",
+        });
+      }
+
+      // Debug: log incoming data EXACTLY as received
+      console.log("\n========== [becomeTutor] REQUEST DEBUG ==========");
+      console.log("[becomeTutor] RAW req.body:", req.body);
+      console.log("[becomeTutor] Keys in req.body:", Object.keys(req.body));
+      console.log("[becomeTutor] Field types:");
+      console.log("  - languages:", typeof req.body.languages, "value:", JSON.stringify(req.body.languages));
+      console.log("  - tags:", typeof req.body.tags, "value:", JSON.stringify(req.body.tags));
+      console.log("  - education:", typeof req.body.education, "value:", JSON.stringify(req.body.education));
+      console.log("  - availabilitySlots:", typeof req.body.availabilitySlots, "value:", JSON.stringify(req.body.availabilitySlots));
+
+      // Validate incoming data with preprocessing for arrays
+      const parsedData = BecomeTutorDTO.safeParse(req.body);
+
+      console.log("\n[becomeTutor] Zod validation result:");
+      console.log("  - success:", parsedData.success);
+      if (!parsedData.success) {
+        console.log("  - errors:", JSON.stringify(parsedData.error.flatten(), null, 2));
+      } else {
+        console.log("  - parsed data:", JSON.stringify(parsedData.data, null, 2));
+      }
+      console.log("========== END DEBUG ==========\n");
+
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          message: z.prettifyError(parsedData.error),
+        });
+      }
+
+      const updatedUser = await userService.becomeTutor(
+        userId,
+        parsedData.data
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Successfully became a tutor",
+        data: updatedUser,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  // =========================
   // UPDATE USER BY ID (ADMIN/PROTECTED)
   // =========================
   async updateUserById(req: Request, res: Response) {
@@ -544,28 +607,31 @@ export class AuthController {
     }
   }
 
-  // =========================
-  // BECOME A TUTOR
-  // =========================
-  async becomeTutor(req: Request, res: Response) {
+  async addTutorReview(req: Request, res: Response) {
     try {
-      const userId = req.user?._id;
+      const reviewerId = req.user?._id;
+      const { id } = req.params;
 
-      if (!userId) {
-        return res.status(400).json({
+      if (!reviewerId) {
+        return res.status(401).json({
           success: false,
-          message: "User ID not found",
+          message: "Unauthorized",
         });
       }
 
-      const tutorData = req.body;
+      const parsedData = AddTutorReviewDTO.safeParse(req.body);
+      if (!parsedData.success) {
+        return res.status(400).json({
+          success: false,
+          errors: parsedData.error.flatten(),
+        });
+      }
 
-      const updatedUser = await userService.becomeTutor(userId, tutorData);
-
+      const tutor = await userService.addTutorReview(id, String(reviewerId), parsedData.data);
       return res.status(200).json({
         success: true,
-        message: "Successfully became a tutor",
-        data: updatedUser,
+        message: "Review submitted successfully",
+        data: tutor,
       });
     } catch (error: any) {
       return res.status(error.statusCode || 500).json({
@@ -575,5 +641,3 @@ export class AuthController {
     }
   }
 }
-
-

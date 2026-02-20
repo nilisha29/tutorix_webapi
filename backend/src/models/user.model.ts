@@ -103,9 +103,12 @@ const UserSchema: Schema = new Schema<UserType>(
     reviews: {
       type: [
         {
+          reviewerId: { type: String, required: false },
           name: { type: String, required: true },
           detail: { type: String, required: true },
+          profileImage: { type: String, required: false },
           quote: { type: String, required: true },
+          rating: { type: Number, required: false, min: 1, max: 5 },
         },
       ],
       default: [],
