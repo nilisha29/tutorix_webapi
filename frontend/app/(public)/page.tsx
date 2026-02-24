@@ -57,6 +57,7 @@ export default function HomePage() {
 
   // Tutor Sections
 
+  
   const topRatedTutors = useMemo(() => {
     return [...tutors]
       .sort((left, right) => {
