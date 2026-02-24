@@ -1,4 +1,5 @@
 import { UserModel, IUser } from "../models/user.model";
+
 export interface IUserRepository {
     getUserByEmail(email: string): Promise<IUser | null>;
     getUserByUsername(username: string): Promise<IUser | null>;
