@@ -46,6 +46,7 @@ export class BookingService {
     } as any);
   }
 
+  
   async getStudentBookings(studentId: string) {
     return await bookingRepository.getBookingsByStudent(studentId);
   }
