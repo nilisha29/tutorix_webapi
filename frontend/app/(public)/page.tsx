@@ -12,9 +12,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Navbar from "./_components/Navbar";
+
 import HeroSection from "./_components/HeroSection";
-import Footer from "./_components/Footer";
+
 import { getTutors } from "@/lib/api/auth";
 
 const categories = [
@@ -99,7 +99,6 @@ export default function HomePage() {
 
   return (
     <div className="bg-white">
-      <Navbar />
       <HeroSection />
 
       <section className="py-6">
@@ -218,6 +217,9 @@ export default function HomePage() {
             </button>
           </div>
 
+        </div>
+      </section>
+
           
       {/* ================= HOW IT WORKS ================= */}
       <section className="py-20 bg-white">
@@ -306,11 +308,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
-        </div>
-      </section>
-
-      <Footer />
     </div>
   );
 }

@@ -1005,9 +1005,6 @@
 
 "use client";
 
-import DashboardNavbar from "../_components/DashboardNavbar";
-import Footer from "../_components/Footer";
-
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1105,8 +1102,6 @@ export default function TutorsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <DashboardNavbar />
-
       <section className="py-12">
         <div className="mx-auto w-full max-w-6xl px-6">
 
@@ -1277,8 +1272,6 @@ export default function TutorsPage() {
           )}
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

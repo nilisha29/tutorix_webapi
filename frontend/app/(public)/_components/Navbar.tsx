@@ -71,12 +71,8 @@ export default function Navbar() {
     return name.charAt(0).toUpperCase();
   };
 
-  const bookSessionHref =
-    user?.role === "tutor"
-      ? "/tutor/bookings"
-      : isAuthenticated
-        ? "/user/bookings"
-        : "/login";
+  // Show authenticated UI if user exists OR if isAuthenticated is true
+  const shouldShowAuthUI = isAuthenticated || !!user;
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-green-100 shadow-sm">
@@ -94,26 +90,40 @@ export default function Navbar() {
           <div className="hidden md:flex gap-8 text-sm text-blue-500">
             <Link href="/" className="hover:text-blue-700">Home</Link>
             <Link href="/tutors" className="hover:text-blue-700">Tutors</Link>
-            <Link href={bookSessionHref} className="hover:text-blue-700">Book Session</Link>
+            <Link href="/categories" className="hover:text-blue-700">Categories</Link>
             <Link href="/about" className="hover:text-blue-700">About</Link>
-            <Link href="/contact" className="hover:text-blue-700">Contact</Link>
           </div>
 
-          {isAuthenticated ? (
+          {shouldShowAuthUI ? (
             <div className="relative">
               <button
                 onClick={() => setOpen(!open)}
-                className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold"
+                className="flex items-center gap-2 hover:opacity-80 transition"
               >
-                {getProfileImageUrl() ? (
-                  <img
-                    src={getProfileImageUrl()!}
-                    alt="Profile"
-                    className="w-9 h-9 rounded-full object-cover"
+                <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
+                  {getProfileImageUrl() ? (
+                    <img
+                      src={getProfileImageUrl()!}
+                      alt="Profile"
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
+                  ) : (
+                    getUserInitial()
+                  )}
+                </div>
+                <svg
+                  className={`w-5 h-5 text-blue-500 transition-transform ${
+                    open ? 'rotate-180' : ''
+                  }`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
                   />
-                ) : (
-                  getUserInitial()
-                )}
+                </svg>
               </button>
 
               {open && (
@@ -125,6 +135,14 @@ export default function Navbar() {
                     onClick={() => setOpen(false)}
                   >
                     My Profile
+                  </Link>
+                  
+                  <Link
+                    href="/user/bookings"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setOpen(false)}
+                  >
+                    My Bookings
                   </Link>
                   
                   {/* Show Tutor Dashboard if user is a tutor */}

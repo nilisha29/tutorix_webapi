@@ -339,9 +339,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getTutorById } from "@/lib/api/auth";
 import { createBooking } from "@/lib/api/booking";
-import Navbar from "../../_components/Navbar";
-import DashboardNavbar from "../../_components/DashboardNavbar";
-import Footer from "../../_components/Footer";
 import { useAuth } from "@/context/AuthContext";
 import { handleSubmitTutorReview } from "@/lib/actions/tutor/review-action";
 import { toast } from "react-toastify";
@@ -622,7 +619,6 @@ export default function TutorDetailPage() {
   if (loading || error || !tutor) {
     return (
       <div className="bg-gradient-to-b from-blue-50 via-white to-blue-50 min-h-screen">
-        {isAuthenticated ? <DashboardNavbar /> : <Navbar />}
         <section className="py-10">
           <div className="mx-auto max-w-6xl px-6 text-slate-500">
             {loading && "Loading tutor..."}
@@ -630,14 +626,12 @@ export default function TutorDetailPage() {
             {!loading && !error && !tutor && "Tutor not found."}
           </div>
         </section>
-        <Footer />
       </div>
     );
   }
 
   return (
     <div className="bg-gradient-to-b from-blue-50 via-white to-blue-50 min-h-screen">
-      {isAuthenticated ? <DashboardNavbar /> : <Navbar />}
       <section className="py-10">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -1036,7 +1030,6 @@ export default function TutorDetailPage() {
           </div>
         </div>
       </section>
-      <Footer />
     </div>
   );
 }
