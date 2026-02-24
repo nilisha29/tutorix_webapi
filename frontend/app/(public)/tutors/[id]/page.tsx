@@ -416,7 +416,7 @@ export default function TutorDetailPage() {
     fetchTutor();
   }, [tutorId]);
 
-  
+
   const rating = tutor?.rating !== undefined ? tutor.rating.toFixed(1) : "5.0";
   const reviewsCount = tutor?.reviewsCount !== undefined ? tutor.reviewsCount : 128;
   const pricePerHour = tutor?.pricePerHour !== undefined ? tutor.pricePerHour : 45;
@@ -443,6 +443,7 @@ export default function TutorDetailPage() {
   const availabilitySlots = tutor?.availabilitySlots || [];
   const reviews = tutor?.reviews || [];
 
+  
   const normalizedAvailabilitySlots = availabilitySlots
     .map((slot) => {
       const parsed = new Date(slot.day);

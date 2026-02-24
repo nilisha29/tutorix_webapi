@@ -1044,6 +1044,7 @@ const getProfileImageUrl = (profileImage?: string) => {
     return profileImage.replace("10.0.2.2", "localhost");
   }
 
+  
   return `${baseUrl}${profileImage.startsWith("/") ? "" : "/"}${profileImage}`.replace(
     "10.0.2.2",
     "localhost"
