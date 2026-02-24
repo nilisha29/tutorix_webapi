@@ -1105,6 +1105,7 @@ export default function TutorsPage() {
     return filteredTutors.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredTutors, currentPage]);
 
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <section className="py-12">
