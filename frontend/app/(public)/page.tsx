@@ -72,6 +72,8 @@ export default function HomePage() {
       .slice(0, 4);
   }, [tutors]);
 
+  // Recommended Tutors 
+
   const recommendedTutors = useMemo(() => {
     return [...tutors]
       .sort((left, right) => {
