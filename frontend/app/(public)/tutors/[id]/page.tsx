@@ -443,7 +443,7 @@ export default function TutorDetailPage() {
   const availabilitySlots = tutor?.availabilitySlots || [];
   const reviews = tutor?.reviews || [];
 
-  
+
   const normalizedAvailabilitySlots = availabilitySlots
     .map((slot) => {
       const parsed = new Date(slot.day);
@@ -455,6 +455,7 @@ export default function TutorDetailPage() {
     })
     .filter((slot) => slot.times.length > 0);
 
+    
   useEffect(() => {
     if (normalizedAvailabilitySlots.length === 0) {
       setSelectedSlotIndex(0);
