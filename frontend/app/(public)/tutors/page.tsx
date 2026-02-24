@@ -1027,6 +1027,7 @@ interface Tutor {
 
 const ITEMS_PER_PAGE = 6;
 
+
 const tutorMeta = [
   { subject: "Math & Physics", rating: "4.9", reviews: "82" },
   { subject: "English & History", rating: "4.8", reviews: "65" },
