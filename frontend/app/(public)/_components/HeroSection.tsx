@@ -1,4 +1,28 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 export default function HeroSection() {
+  const router = useRouter();
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const handleSearch = () => {
+    const term = searchTerm.trim();
+    if (!term) {
+      router.push("/tutors");
+      return;
+    }
+    router.push(`/tutors?search=${encodeURIComponent(term)}`);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      handleSearch();
+    }
+  };
+
   return (
     <section className="bg-slate-50 pt-8 pb-14">
       <div className="max-w-7xl mx-auto px-6">
@@ -36,13 +60,19 @@ export default function HeroSection() {
                   <input
                     type="text"
                     placeholder="Search by subject, level, or keyword..."
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
                   />
                 </div>
                 <button className="px-4 py-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 bg-white hover:bg-slate-50">
                   Filters
                 </button>
-                <button className="px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700">
+                <button
+                  onClick={handleSearch}
+                  className="px-6 py-3 rounded-xl bg-blue-600 text-white text-sm font-semibold shadow-sm hover:bg-blue-700"
+                >
                   Search
                 </button>
               </div>

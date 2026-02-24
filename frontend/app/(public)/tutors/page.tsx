@@ -1009,7 +1009,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getTutors } from "@/lib/api/auth";
 
 interface Tutor {
@@ -1054,11 +1054,17 @@ const getProfileImageUrl = (profileImage?: string) => {
 
 export default function TutorsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    const searchFromQuery = searchParams.get("search") || "";
+    setSearch(searchFromQuery);
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchTutors = async () => {

@@ -17,6 +17,14 @@ import HeroSection from "./_components/HeroSection";
 
 import { getTutors } from "@/lib/api/auth";
 
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+
 const categories = [
   "All Subjects",
   "Mathematics",
@@ -110,8 +118,9 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-wrap gap-3">
             {categories.map((category, index) => (
-              <button
+              <Link
                 key={category}
+                href={index === 0 ? "/categories" : `/categories/${slugify(category)}`}
                 className={
                   index === 0
                     ? "px-4 py-2 rounded-full bg-blue-600 text-white text-xs font-semibold"
@@ -119,7 +128,7 @@ export default function HomePage() {
                 }
               >
                 {category}
-              </button>
+              </Link>
             ))}
           </div>
         </div>
@@ -132,7 +141,7 @@ export default function HomePage() {
               <h2 className="text-2xl font-semibold text-slate-900">Top Rated Tutors</h2>
               <p className="text-sm text-slate-500">Carefully selected based on learner success.</p>
             </div>
-            <a href="#" className="text-sm font-semibold text-blue-600 hover:text-blue-700">See all</a>
+            <Link href="/tutors" className="text-sm font-semibold text-blue-600 hover:text-blue-700">See all</Link>
           </div>
 
           <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
