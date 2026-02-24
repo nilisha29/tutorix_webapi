@@ -338,6 +338,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getTutorById } from "@/lib/api/auth";
+import { createBooking } from "@/lib/api/booking";
 import Navbar from "../../_components/Navbar";
 import DashboardNavbar from "../../_components/DashboardNavbar";
 import Footer from "../../_components/Footer";
@@ -385,6 +386,8 @@ export default function TutorDetailPage() {
   const [selectedDuration, setSelectedDuration] = useState("60 min");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"esewa" | "khalti" | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [awaitingMockPayment, setAwaitingMockPayment] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<"idle" | "success" | "failed">("idle");
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
@@ -493,6 +496,11 @@ export default function TutorDetailPage() {
   const durationInMinutes = selectedDuration === "30 min" ? 30 : selectedDuration === "90 min" ? 90 : 60;
   const totalPrice = (pricePerHour * durationInMinutes) / 60;
   const totalPriceLabel = Number.isInteger(totalPrice) ? `${totalPrice}` : totalPrice.toFixed(2);
+  const isPaymentTestMode =
+    process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === "true" ||
+    process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === "1";
+  const esewaLink = process.env.NEXT_PUBLIC_ESEWA_CHECKOUT_LINK;
+  const khaltiLink = process.env.NEXT_PUBLIC_KHALTI_CHECKOUT_LINK;
 
   const handleBookAndPay = async () => {
     if (!isAuthenticated) {
@@ -510,35 +518,63 @@ export default function TutorDetailPage() {
 
     try {
       setProcessingPayment(true);
+      setPaymentStatus("idle");
       const amount = totalPriceLabel;
       const bookingRef = `TUTORIX-${tutorId}-${Date.now()}`;
 
+      const gatewayConfigured =
+        selectedPaymentMethod === "esewa" ? Boolean(esewaLink) : Boolean(khaltiLink);
+
+      if (isPaymentTestMode || !gatewayConfigured) {
+        setAwaitingMockPayment(true);
+        toast.info(
+          isPaymentTestMode
+            ? "Test mode enabled. Use mock payment buttons below."
+            : "Payment gateway is not configured. Using mock payment buttons below."
+        );
+        return;
+      }
+
       if (selectedPaymentMethod === "esewa") {
-        const esewaLink = process.env.NEXT_PUBLIC_ESEWA_CHECKOUT_LINK;
-        if (!esewaLink) {
-          toast.info("eSewa checkout link not set. Redirecting to eSewa homepage.");
-          window.location.href = "https://esewa.com.np/#/home";
-          return;
-        }
-        const redirectUrl = `${esewaLink}${esewaLink.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
+        const redirectUrl = `${esewaLink!}${esewaLink!.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
         window.location.href = redirectUrl;
         return;
       }
 
       if (selectedPaymentMethod === "khalti") {
-        const khaltiLink = process.env.NEXT_PUBLIC_KHALTI_CHECKOUT_LINK;
-        if (!khaltiLink) {
-          toast.info("Khalti checkout link not set. Redirecting to Khalti homepage.");
-          window.location.href = "https://khalti.com/";
-          return;
-        }
-        const redirectUrl = `${khaltiLink}${khaltiLink.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
+        const redirectUrl = `${khaltiLink!}${khaltiLink!.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
         window.location.href = redirectUrl;
         return;
       }
     } finally {
       setProcessingPayment(false);
     }
+  };
+
+  const handleMockPaymentResult = async (result: "success" | "failed") => {
+    setAwaitingMockPayment(false);
+    setPaymentStatus(result);
+
+    if (result === "success") {
+      try {
+        await createBooking({
+          tutorId,
+          date: selectedDate,
+          time: selectedTime,
+          duration: selectedDuration,
+          paymentMethod: selectedPaymentMethod || "esewa",
+          amount: Number(totalPriceLabel),
+          paymentStatus: "paid",
+          bookingStatus: "confirmed",
+        });
+        toast.success("Payment successful (test mode). Booking confirmed.");
+      } catch (error: Error | any) {
+        toast.error(error.message || "Payment succeeded but booking save failed");
+      }
+      return;
+    }
+
+    toast.error("Payment failed (test mode). Please try again.");
   };
 
   const onSubmitReview = async () => {
@@ -919,6 +955,12 @@ export default function TutorDetailPage() {
                       <span className="font-semibold">{selectedPaymentMethod === "esewa" ? "eSewa" : selectedPaymentMethod === "khalti" ? "Khalti" : "Not selected"}</span>
                     </div>
                     <div className="flex items-center justify-between">
+                      <span>Payment Status:</span>
+                      <span className={`font-semibold ${paymentStatus === "success" ? "text-green-600" : paymentStatus === "failed" ? "text-red-600" : "text-slate-700"}`}>
+                        {paymentStatus === "success" ? "Paid" : paymentStatus === "failed" ? "Failed" : "Pending"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
                       <span>Total:</span>
                       <span className="font-semibold">${totalPriceLabel}</span>
                     </div>
@@ -933,6 +975,34 @@ export default function TutorDetailPage() {
                 >
                   {processingPayment ? "Redirecting..." : "Book & Pay"}
                 </button>
+
+                {awaitingMockPayment && (
+                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-xs text-amber-700 font-semibold mb-2">Mock Payment</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMockPaymentResult("success")}
+                        className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
+                      >
+                        Mock Pay Success
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleMockPaymentResult("failed")}
+                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                      >
+                        Mock Pay Failed
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!awaitingMockPayment && (isPaymentTestMode || (!esewaLink && !khaltiLink)) && (
+                  <p className="mt-2 text-xs text-slate-500">
+                    Mock payment active. Click Book & Pay, then choose mock payment result.
+                  </p>
+                )}
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <button className="rounded-lg border border-slate-200 py-2 text-slate-600 hover:bg-slate-50">Message</button>

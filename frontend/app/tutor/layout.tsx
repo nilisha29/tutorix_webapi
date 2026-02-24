@@ -1,37 +1,33 @@
-"use client";
+import { redirect } from "next/navigation";
+import { handleWhoAmI } from "@/lib/actions/auth-action";
+import TutorSidebar from "./_components/Sidebar";
+import TutorHeader from "./_components/Header";
 
-import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import Navbar from "@/app/(public)/_components/Navbar";
-
-export default function TutorLayout({
+export default async function TutorLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const result = await handleWhoAmI();
 
-  useEffect(() => {
-    if (!loading && (!user || user.role !== "tutor")) {
-      router.push("/");
-    }
-  }, [user, loading, router]);
+  if (!result.success || !result.data) {
+    redirect("/login");
+  }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Loading...</p>
-      </div>
-    );
+  if (result.data.role !== "tutor") {
+    redirect("/");
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {children}
+    <div className="flex w-full min-h-screen bg-gray-50">
+      <div className="xl:block hidden">
+        <TutorSidebar />
+      </div>
+      <div className="w-full xl:ml-64">
+        <TutorHeader />
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 p-6">
+          {children}
+        </main>
       </div>
     </div>
   );

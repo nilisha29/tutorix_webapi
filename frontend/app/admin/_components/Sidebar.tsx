@@ -62,6 +62,7 @@ const ADMIN_LINKS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/tutors", label: "Tutors" },
+  { href: "/admin/bookings", label: "Bookings" },
   { href: "/admin/reviews", label: "Reviews" },
 ];
 

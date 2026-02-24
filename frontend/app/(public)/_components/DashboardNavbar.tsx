@@ -390,8 +390,10 @@ export default function DashboardNavbar() {
     return name.charAt(0).toUpperCase();
   };
 
+  const bookSessionHref = user?.role === "tutor" ? "/tutor/bookings" : "/user/bookings";
+
   return (
-    <nav className="w-full bg-green-100 shadow-sm">
+    <nav className="sticky top-0 z-50 w-full bg-green-100 shadow-sm">
       <div className="w-full flex items-center justify-between px-6 py-4">
 
         {/* LEFT: Logo */}
@@ -411,7 +413,7 @@ export default function DashboardNavbar() {
           <div className="hidden md:flex gap-8 text-sm text-blue-500">
             <Link href="/" className="hover:text-blue-700">Home</Link>
             <Link href="/tutors" className="hover:text-blue-700">Tutors</Link>
-            <Link href="#" className="hover:text-blue-700">Book Session</Link>
+            <Link href={bookSessionHref} className="hover:text-blue-700">Book Session</Link>
             <Link href="/about" className="hover:text-blue-700">About</Link>
             <Link href="/contact" className="hover:text-blue-700">Contact</Link>
           </div>

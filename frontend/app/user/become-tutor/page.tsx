@@ -7,7 +7,6 @@ import { useRef, useState, useTransition, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import Navbar from "@/app/(public)/_components/Navbar";
 import { handleBecomeTutor } from "@/lib/actions/admin/user-action";
 
 export default function BecomeTutorPage() {
@@ -171,7 +170,6 @@ export default function BecomeTutorPage() {
   if (user?.role === "tutor") {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
         <div className="max-w-4xl mx-auto py-12 px-6">
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
             You are already a tutor! Visit your <a href="/tutor/dashboard" className="font-semibold underline">dashboard</a>.
@@ -183,7 +181,6 @@ export default function BecomeTutorPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <div className="max-w-2xl mx-auto py-12 px-6">
         <h1 className="text-3xl font-bold text-blue-600 mb-2">Become a Tutor</h1>
         <p className="text-gray-600 mb-8">

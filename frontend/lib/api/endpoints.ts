@@ -13,6 +13,12 @@ export const API = {
     TUTORS: {
         GET_BY_ID: '/api/tutors',
     },
+    BOOKINGS: {
+        CREATE: '/api/bookings',
+        MY_STUDENT: '/api/bookings/my-student',
+        MY_TUTOR: '/api/bookings/my-tutor',
+        ADMIN_ALL: '/api/bookings/admin',
+    },
      ADMIN:{
         USER:{
             CREATE: '/api/admin/users/',
