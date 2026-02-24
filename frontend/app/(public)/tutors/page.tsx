@@ -1035,6 +1035,7 @@ const tutorMeta = [
   { subject: "SAT/ACT Prep", rating: "5.0", reviews: "120" },
 ];
 
+
 const getProfileImageUrl = (profileImage?: string) => {
   if (!profileImage) return "";
   const baseUrl =
@@ -1044,7 +1045,7 @@ const getProfileImageUrl = (profileImage?: string) => {
     return profileImage.replace("10.0.2.2", "localhost");
   }
 
-  
+
   return `${baseUrl}${profileImage.startsWith("/") ? "" : "/"}${profileImage}`.replace(
     "10.0.2.2",
     "localhost"
