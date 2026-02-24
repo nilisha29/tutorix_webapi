@@ -569,7 +569,6 @@ export class AuthController {
   }
 
 
-
   // =========================
   // GET TUTORS (PUBLIC)
   // =========================
@@ -589,7 +588,6 @@ export class AuthController {
     }
   }
 
-  
   // =========================
   // GET TUTOR BY ID (PUBLIC)
   // =========================
