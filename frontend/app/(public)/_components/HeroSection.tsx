@@ -54,6 +54,7 @@ export default function HeroSection() {
               </div>
             </div>
 
+
             <div className="relative flex justify-center lg:justify-end">
               {/* <div className="w-full max-w-140 rounded-3xl bg-white/90 p-4 shadow-2xl sm:p-5"> */}
                 <img
