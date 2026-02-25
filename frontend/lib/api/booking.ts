@@ -15,6 +15,27 @@ export const createBooking = async (payload: {
   return response.data;
 };
 
+export const initiateBookingPayment = async (payload: {
+  tutorId: string;
+  date: string;
+  time: string;
+  duration: string;
+  paymentMethod: "esewa" | "khalti";
+  amount: number;
+}) => {
+  const response = await axios.post(API.BOOKINGS.INITIATE_PAYMENT, payload);
+  return response.data;
+};
+
+export const verifyBookingPayment = async (payload: {
+  bookingId: string;
+  status: string;
+  gatewayTxnId?: string;
+}) => {
+  const response = await axios.post(API.BOOKINGS.VERIFY_PAYMENT, payload);
+  return response.data;
+};
+
 export const getMyStudentBookings = async () => {
   const response = await axios.get(API.BOOKINGS.MY_STUDENT);
   return response.data;

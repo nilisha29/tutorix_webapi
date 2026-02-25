@@ -4,6 +4,8 @@ export const API = {
     AUTH:{
         REGISTER: "/api/auth/register", // backend ko route path
         LOGIN: "/api/auth/login",
+        FORGOT_PASSWORD: "/api/auth/forgot-password",
+        RESET_PASSWORD: "/api/auth/reset-password",
 
            WHOAMI: '/api/auth/whoami',
          UPDATEPROFILE: '/api/auth/update-profile',
@@ -15,6 +17,8 @@ export const API = {
     },
     BOOKINGS: {
         CREATE: '/api/bookings',
+        INITIATE_PAYMENT: '/api/bookings/payments/initiate',
+        VERIFY_PAYMENT: '/api/bookings/payments/verify',
         MY_STUDENT: '/api/bookings/my-student',
         MY_TUTOR: '/api/bookings/my-tutor',
         ADMIN_ALL: '/api/bookings/admin',

@@ -126,6 +126,15 @@ const UserSchema: Schema = new Schema<UserType>(
       enum: ["user", "admin", "tutor"],
       default: "user",
     },
+    resetPasswordToken: {
+      type: String,
+      required: false,
+      index: true,
+    },
+    resetPasswordExpiresAt: {
+      type: Date,
+      required: false,
+    },
   },
   {
     timestamps: true,

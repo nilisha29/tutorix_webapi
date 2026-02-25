@@ -115,6 +115,8 @@ import bcryptjs from "bcryptjs";
 import { HttpError } from "../errors/http-error";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config";
+import crypto from "crypto";
+import { sendEmail } from "../config/email";
 
 const userRepository = new UserRepository();
 
@@ -378,5 +380,108 @@ export class UserService {
     }
 
     return savedTutor;
+  }
+
+  async forgotPassword(email: string) {
+    const user = await userRepository.getUserByEmail(email);
+
+    if (!user) {
+      return {
+        success: true,
+        message: "If that email is registered, a reset link has been generated.",
+      };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto.createHash("sha256").update(rawToken).digest("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+    await userRepository.setResetPasswordToken(String(user._id), hashedToken, expiresAt);
+
+    const frontendBaseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
+    const resetUrl = `${frontendBaseUrl}/reset-password?token=${rawToken}`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+        <h2 style="margin-bottom: 8px;">Reset your Tutorix password</h2>
+        <p>We received a request to reset your password.</p>
+        <p>This link will expire in 15 minutes.</p>
+        <p style="margin: 20px 0;">
+          <a href="${resetUrl}" style="background: #2563eb; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+        </p>
+        <p>If you did not request this, you can safely ignore this email.</p>
+      </div>
+    `;
+
+    try {
+      await sendEmail(user.email, "Tutorix Password Reset", html);
+    } catch (error) {
+      await userRepository.clearResetPasswordToken(String(user._id));
+
+      if (process.env.NODE_ENV !== "production") {
+        return {
+          success: true,
+          message: "Email delivery failed in local environment. Use the debug reset link below.",
+          resetUrl,
+        };
+      }
+
+      throw new HttpError(500, "Failed to send reset password email");
+    }
+
+    if (process.env.NODE_ENV !== "production") {
+      return {
+        success: true,
+        message: "If that email is registered, a reset link has been sent.",
+        resetUrl,
+      };
+    }
+
+    return {
+      success: true,
+      message: "If that email is registered, a reset link has been sent.",
+    };
+  }
+
+  async sendResetPasswordEmail(email?: string) {
+    if (!email) {
+      throw new HttpError(400, "Email is required");
+    }
+
+    await this.forgotPassword(email);
+
+    const user = await userRepository.getUserByEmail(email);
+    return {
+      success: true,
+      user,
+      message: "If the email is registered, a reset link has been sent.",
+    };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await userRepository.getUserByResetPasswordToken(hashedToken);
+
+    if (!user) {
+      throw new HttpError(400, "Invalid or expired reset token");
+    }
+
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await userRepository.updateUser(String(user._id), {
+      password: hashedPassword,
+    } as any);
+    await userRepository.clearResetPasswordToken(String(user._id));
+
+    return {
+      success: true,
+      message: "Password reset successful. Please login with your new password.",
+    };
+  }
+
+  async resetPasswordByToken(token?: string, newPassword?: string) {
+    if (!token || !newPassword) {
+      throw new HttpError(400, "Token and new password are required");
+    }
+
+    return await this.resetPassword(token, newPassword);
   }
 }

@@ -9,9 +9,13 @@ import Footer from "@/app/(public)/_components/Footer";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isLoginOrRegister = pathname === "/login" || pathname === "/register";
+  const isAuthFormPage =
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password";
 
-  if (isLoginOrRegister) {
+  if (isAuthFormPage) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         {children}

@@ -6,6 +6,31 @@ export class BookingRepository {
     return await booking.save();
   }
 
+  async getBookingById(bookingId: string) {
+    return await BookingModel.findById(bookingId).exec();
+  }
+
+  async updatePaymentStatus(
+    bookingId: string,
+    payload: {
+      paymentStatus: "pending" | "paid" | "failed";
+      bookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+      gatewayTxnId?: string;
+    }
+  ) {
+    return await BookingModel.findByIdAndUpdate(
+      bookingId,
+      {
+        $set: {
+          paymentStatus: payload.paymentStatus,
+          bookingStatus: payload.bookingStatus,
+          gatewayTxnId: payload.gatewayTxnId,
+        },
+      },
+      { new: true }
+    ).exec();
+  }
+
   async getBookingsByStudent(studentId: string) {
     return await BookingModel.find({ studentId })
       .populate("tutorId", "fullName username email profileImage")

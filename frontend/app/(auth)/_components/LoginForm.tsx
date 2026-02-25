@@ -376,6 +376,11 @@ export default function LoginForm() {
           {errors.password && (
             <p className="text-xs text-red-600">{errors.password.message}</p>
           )}
+          <div className="mt-2 text-right">
+            <Link href="/forgot-password" className="text-xs text-blue-600 font-semibold hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         {/* Sign In Button */}

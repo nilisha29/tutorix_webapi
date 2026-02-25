@@ -29,6 +29,9 @@ export interface IUserRepository {
     deleteTutorReviewByReviewerId(tutorId: string, reviewerId: string): Promise<IUser | null>;
     updateUser(id: string, updateData: Partial<IUser>): Promise<IUser | null>;
     deleteUser(id: string): Promise<boolean>;
+    getUserByResetPasswordToken(token: string): Promise<IUser | null>;
+    setResetPasswordToken(userId: string, token: string, expiresAt: Date): Promise<IUser | null>;
+    clearResetPasswordToken(userId: string): Promise<IUser | null>;
 }
 
 
@@ -202,5 +205,38 @@ export class UserRepository implements IUserRepository {
         // UserModel.deleteOne({ _id: id });
         const result = await UserModel.findByIdAndDelete(id);
         return result ? true : false;
+    }
+
+    async getUserByResetPasswordToken(token: string): Promise<IUser | null> {
+        return await UserModel.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpiresAt: { $gt: new Date() },
+        }).exec();
+    }
+
+    async setResetPasswordToken(userId: string, token: string, expiresAt: Date): Promise<IUser | null> {
+        return await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    resetPasswordToken: token,
+                    resetPasswordExpiresAt: expiresAt,
+                },
+            },
+            { new: true }
+        ).exec();
+    }
+
+    async clearResetPasswordToken(userId: string): Promise<IUser | null> {
+        return await UserModel.findByIdAndUpdate(
+            userId,
+            {
+                $unset: {
+                    resetPasswordToken: 1,
+                    resetPasswordExpiresAt: 1,
+                },
+            },
+            { new: true }
+        ).exec();
     }
 }

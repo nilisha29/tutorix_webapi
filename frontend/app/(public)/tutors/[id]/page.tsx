@@ -338,7 +338,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getTutorById } from "@/lib/api/auth";
-import { createBooking } from "@/lib/api/booking";
+import { initiateBookingPayment } from "@/lib/api/booking";
 import { useAuth } from "@/context/AuthContext";
 import { handleSubmitTutorReview } from "@/lib/actions/tutor/review-action";
 import { toast } from "react-toastify";
@@ -384,7 +384,6 @@ export default function TutorDetailPage() {
   const [selectedDuration, setSelectedDuration] = useState("60 min");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"esewa" | "khalti" | null>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [awaitingMockPayment, setAwaitingMockPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "success" | "failed">("idle");
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState("");
@@ -497,12 +496,6 @@ export default function TutorDetailPage() {
   const durationInMinutes = selectedDuration === "30 min" ? 30 : selectedDuration === "90 min" ? 90 : 60;
   const totalPrice = (pricePerHour * durationInMinutes) / 60;
   const totalPriceLabel = Number.isInteger(totalPrice) ? `${totalPrice}` : totalPrice.toFixed(2);
-  const isPaymentTestMode =
-    process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === "true" ||
-    process.env.NEXT_PUBLIC_PAYMENT_TEST_MODE === "1";
-  const esewaLink = process.env.NEXT_PUBLIC_ESEWA_CHECKOUT_LINK;
-  const khaltiLink = process.env.NEXT_PUBLIC_KHALTI_CHECKOUT_LINK;
-
   const handleBookAndPay = async () => {
     if (!isAuthenticated) {
       toast.error("Please login first to book and pay");
@@ -520,62 +513,48 @@ export default function TutorDetailPage() {
     try {
       setProcessingPayment(true);
       setPaymentStatus("idle");
-      const amount = totalPriceLabel;
-      const bookingRef = `TUTORIX-${tutorId}-${Date.now()}`;
+      const response = await initiateBookingPayment({
+        tutorId,
+        date: selectedDate,
+        time: selectedTime,
+        duration: selectedDuration,
+        paymentMethod: selectedPaymentMethod,
+        amount: Number(totalPriceLabel),
+      });
 
-      const gatewayConfigured =
-        selectedPaymentMethod === "esewa" ? Boolean(esewaLink) : Boolean(khaltiLink);
+      const redirectUrl = response?.data?.redirectUrl;
+      const redirectMethod = response?.data?.redirectMethod;
+      const redirectFormFields = response?.data?.redirectFormFields;
+      if (!redirectUrl) {
+        throw new Error("Payment redirect URL not found");
+      }
 
-      if (isPaymentTestMode || !gatewayConfigured) {
-        setAwaitingMockPayment(true);
-        toast.info(
-          isPaymentTestMode
-            ? "Test mode enabled. Use mock payment buttons below."
-            : "Payment gateway is not configured. Using mock payment buttons below."
-        );
+      if (redirectMethod === "POST" && redirectFormFields) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = redirectUrl;
+
+        Object.entries(redirectFormFields).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
         return;
       }
 
-      if (selectedPaymentMethod === "esewa") {
-        const redirectUrl = `${esewaLink!}${esewaLink!.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
-        window.location.href = redirectUrl;
-        return;
-      }
-
-      if (selectedPaymentMethod === "khalti") {
-        const redirectUrl = `${khaltiLink!}${khaltiLink!.includes("?") ? "&" : "?"}amount=${encodeURIComponent(amount)}&ref=${encodeURIComponent(bookingRef)}`;
-        window.location.href = redirectUrl;
-        return;
-      }
+      window.location.href = redirectUrl;
+      return;
+    } catch (error: Error | any) {
+      const backendMessage = error?.response?.data?.message;
+      toast.error(backendMessage || error.message || "Failed to initiate payment");
     } finally {
       setProcessingPayment(false);
     }
-  };
-
-  const handleMockPaymentResult = async (result: "success" | "failed") => {
-    setAwaitingMockPayment(false);
-    setPaymentStatus(result);
-
-    if (result === "success") {
-      try {
-        await createBooking({
-          tutorId,
-          date: selectedDate,
-          time: selectedTime,
-          duration: selectedDuration,
-          paymentMethod: selectedPaymentMethod || "esewa",
-          amount: Number(totalPriceLabel),
-          paymentStatus: "paid",
-          bookingStatus: "confirmed",
-        });
-        toast.success("Payment successful (test mode). Booking confirmed.");
-      } catch (error: Error | any) {
-        toast.error(error.message || "Payment succeeded but booking save failed");
-      }
-      return;
-    }
-
-    toast.error("Payment failed (test mode). Please try again.");
   };
 
   const onSubmitReview = async () => {
@@ -622,7 +601,7 @@ export default function TutorDetailPage() {
 
   if (loading || error || !tutor) {
     return (
-      <div className="bg-gradient-to-b from-blue-50 via-white to-blue-50 min-h-screen">
+      <div className="bg-linear-to-b from-blue-50 via-white to-blue-50 min-h-screen">
         <section className="py-10">
           <div className="mx-auto max-w-6xl px-6 text-slate-500">
             {loading && "Loading tutor..."}
@@ -635,7 +614,7 @@ export default function TutorDetailPage() {
   }
 
   return (
-    <div className="bg-gradient-to-b from-blue-50 via-white to-blue-50 min-h-screen">
+    <div className="bg-linear-to-b from-blue-50 via-white to-blue-50 min-h-screen">
       <section className="py-10">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -652,7 +631,7 @@ export default function TutorDetailPage() {
                         className="h-20 w-20 rounded-full object-cover border border-blue-200 shadow-sm"
                       />
                     ) : (
-                      <div className="h-20 w-20 rounded-full bg-gradient-to-br from-blue-600 to-sky-400 flex items-center justify-center text-white font-bold text-2xl shadow-md border border-blue-200">
+                      <div className="h-20 w-20 rounded-full bg-linear-to-br from-blue-600 to-sky-400 flex items-center justify-center text-white font-bold text-2xl shadow-md border border-blue-200">
                         {tutor.fullName.charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -974,33 +953,9 @@ export default function TutorDetailPage() {
                   {processingPayment ? "Redirecting..." : "Book & Pay"}
                 </button>
 
-                {awaitingMockPayment && (
-                  <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <p className="text-xs text-amber-700 font-semibold mb-2">Mock Payment</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleMockPaymentResult("success")}
-                        className="rounded-lg bg-green-600 px-3 py-2 text-xs font-semibold text-white hover:bg-green-700"
-                      >
-                        Mock Pay Success
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleMockPaymentResult("failed")}
-                        className="rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
-                      >
-                        Mock Pay Failed
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {!awaitingMockPayment && (isPaymentTestMode || (!esewaLink && !khaltiLink)) && (
-                  <p className="mt-2 text-xs text-slate-500">
-                    Mock payment active. Click Book & Pay, then choose mock payment result.
-                  </p>
-                )}
+                <p className="mt-2 text-xs text-slate-500">
+                  You will be redirected to the selected payment gateway and returned after payment.
+                </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <button className="rounded-lg border border-slate-200 py-2 text-slate-600 hover:bg-slate-50">Message</button>

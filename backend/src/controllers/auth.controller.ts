@@ -318,6 +318,91 @@ type CreateUserInput = z.infer<typeof CreateUserDTO>;
 type LoginUserInput = z.infer<typeof LoginUserDTO>;
 
 export class AuthController {
+  async sendResetPasswordEmail(req: Request, res: Response) {
+    try {
+      const email = String(req.body?.email || "").trim().toLowerCase();
+      const result = await userService.sendResetPasswordEmail(email);
+
+      return res.status(200).json({
+        success: true,
+        data: result.user,
+        message: result.message,
+      });
+    } catch (error: Error | any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async resetPasswordWithToken(req: Request, res: Response) {
+    try {
+      const token = String(req.params.token || "").trim();
+      const newPassword = String(req.body?.newPassword || req.body?.password || "");
+
+      const result = await userService.resetPasswordByToken(token, newPassword);
+      return res.status(200).json({
+        success: true,
+        message: result.message || "Password has been reset successfully.",
+      });
+    } catch (error: Error | any) {
+      return res.status(error.statusCode ?? 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async forgotPassword(req: Request, res: Response) {
+    try {
+      const email = String(req.body?.email || "").trim().toLowerCase();
+      if (!email) {
+        return res.status(400).json({
+          success: false,
+          message: "Email is required",
+        });
+      }
+
+      const result = await userService.forgotPassword(email);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      const token = String(req.body?.token || "").trim();
+      const password = String(req.body?.password || "");
+
+      if (!token || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Token and new password are required",
+        });
+      }
+
+      if (password.length < 6) {
+        return res.status(400).json({
+          success: false,
+          message: "Password must be at least 6 characters",
+        });
+      }
+
+      const result = await userService.resetPassword(token, password);
+      return res.status(200).json(result);
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
   // =========================
   // REGISTER
   // =========================

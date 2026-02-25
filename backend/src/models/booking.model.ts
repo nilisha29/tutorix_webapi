@@ -11,6 +11,8 @@ export interface IBooking extends Document {
   duration: string;
   paymentMethod: "esewa" | "khalti";
   amount: number;
+  paymentRef?: string;
+  gatewayTxnId?: string;
   paymentStatus: PaymentStatus;
   bookingStatus: BookingStatus;
 }
@@ -51,6 +53,14 @@ const BookingSchema = new Schema<IBooking>(
       type: Number,
       required: true,
       min: 0,
+    },
+    paymentRef: {
+      type: String,
+      trim: true,
+    },
+    gatewayTxnId: {
+      type: String,
+      trim: true,
     },
     paymentStatus: {
       type: String,
