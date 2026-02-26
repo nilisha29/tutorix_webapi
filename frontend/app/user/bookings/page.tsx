@@ -8,7 +8,7 @@ export default function UserBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  
+
   useEffect(() => {
     const fetchBookings = async () => {
       try {
@@ -23,6 +23,7 @@ export default function UserBookingsPage() {
       }
     };
 
+    
     fetchBookings();
   }, []);
 
