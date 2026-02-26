@@ -549,7 +549,7 @@ export class AuthController {
     }
   }
 
-  
+
   // =========================
   // BECOME TUTOR
   // =========================
@@ -593,6 +593,7 @@ export class AuthController {
         });
       }
 
+      
       const updatedUser = await userService.becomeTutor(
         userId,
         parsedData.data
