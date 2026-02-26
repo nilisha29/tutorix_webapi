@@ -852,6 +852,7 @@ export default function BecomeTutorPage() {
             )}
           </div>
 
+
           {/* Error Message */}
           {error && <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg text-red-700">{error}</div>}
 
