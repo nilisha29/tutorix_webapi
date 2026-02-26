@@ -436,7 +436,7 @@ export default function CategoryTutorsPage() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-slate-900">${tutor.pricePerHour ?? 0}/hr</span>
+                    <span className="font-semibold text-slate-900">Rs {tutor.pricePerHour ?? 0}/hr</span>
                     <span className="text-slate-600">★ {(tutor.rating ?? 0).toFixed(1)} ({tutor.reviewsCount ?? 0})</span>
                   </div>
 

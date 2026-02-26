@@ -645,7 +645,7 @@ export default function BecomeTutorPage() {
 
   if (user?.role === "tutor") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-tr from-green-100 to-green-200">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-tr from-green-100 to-green-200">
         <div className="bg-white rounded-xl shadow-lg border border-green-400 p-6 max-w-md text-center">
           <p className="text-green-700 font-medium">
             You are already a tutor! Visit your <a href="/tutor/dashboard" className="font-semibold underline">dashboard</a>.
@@ -656,7 +656,7 @@ export default function BecomeTutorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-50 via-white to-pink-50 py-12">
+    <div className="min-h-screen bg-linear-to-tr from-blue-50 via-white to-pink-50 py-12">
       <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-blue-600">Become a Tutor</h1>
@@ -738,7 +738,7 @@ export default function BecomeTutorPage() {
               </div>
               {/* Price */}
               <div className="space-y-1">
-                <label className="text-sm font-medium">Price per Hour ($) *</label>
+                <label className="text-sm font-medium">Price per Hour (Rs) *</label>
                 <input
                   type="number"
                   placeholder="25"

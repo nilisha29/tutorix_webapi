@@ -144,6 +144,22 @@ export default function Navbar() {
                   >
                     My Bookings
                   </Link>
+
+                  <Link
+                    href="/user/saved"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setOpen(false)}
+                  >
+                    Saved
+                  </Link>
+
+                  <Link
+                    href="/user/settings"
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setOpen(false)}
+                  >
+                    Settings
+                  </Link>
                   
                   {/* Show Tutor Dashboard if user is a tutor */}
                   {(() => {

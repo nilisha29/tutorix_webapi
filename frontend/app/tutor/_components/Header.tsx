@@ -6,7 +6,7 @@ export default function TutorHeader() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="h-16 w-full border-b border-gray-200 bg-white flex items-center justify-between px-6">
+    <header className="fixed top-0 left-0 xl:left-64 right-0 h-16 border-b border-gray-200 bg-white z-40 flex items-center justify-between px-6">
       <h1 className="text-lg font-semibold text-gray-800">Tutor Dashboard</h1>
       <div className="flex items-center gap-3">
         <span className="text-sm text-gray-600">

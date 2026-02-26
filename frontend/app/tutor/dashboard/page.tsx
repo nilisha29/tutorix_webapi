@@ -2,9 +2,41 @@
 
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { getMyTutorBookings } from "@/lib/api/booking";
 
 export default function TutorDashboard() {
   const { user } = useAuth();
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const result = await getMyTutorBookings();
+        setBookings(result.data || []);
+      } catch {
+        setBookings([]);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  const stats = useMemo(() => {
+    const totalBookings = bookings.length;
+    const paidBookings = bookings.filter((item) => item.paymentStatus === "paid");
+    const pendingPayments = bookings.filter((item) => item.paymentStatus !== "paid");
+    const totalEarnings = paidBookings.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const uniqueStudents = new Set(bookings.map((item) => String(item.studentId?._id || item.studentId || ""))).size;
+
+    return {
+      totalBookings,
+      paidPayments: paidBookings.length,
+      pendingPayments: pendingPayments.length,
+      totalEarnings,
+      uniqueStudents,
+    };
+  }, [bookings]);
 
   return (
     <div>
@@ -22,19 +54,30 @@ export default function TutorDashboard() {
         />
         <StatCard
           title="Total Earnings"
-          value="$0.00"
+          value={`Rs ${stats.totalEarnings.toFixed(2)}`}
           icon="💰"
         />
         <StatCard
           title="Bookings"
-          value="0"
+          value={String(stats.totalBookings)}
           icon="📅"
         />
         <StatCard
           title="Students"
-          value="0"
+          value={String(stats.uniqueStudents)}
           icon="👥"
         />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <p className="text-gray-600 text-sm">Paid Payments</p>
+          <p className="text-2xl font-bold text-green-700 mt-2">{stats.paidPayments}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <p className="text-gray-600 text-sm">Pending Payments</p>
+          <p className="text-2xl font-bold text-amber-700 mt-2">{stats.pendingPayments}</p>
+        </div>
       </div>
 
       {/* Quick Actions */}

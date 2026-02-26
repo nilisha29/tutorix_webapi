@@ -49,7 +49,7 @@ export default function UserBookingsPage() {
             <p className="text-sm text-gray-600">Time: {booking.time}</p>
             <p className="text-sm text-gray-600">Duration: {booking.duration}</p>
             <p className="text-sm text-gray-600">Payment: {booking.paymentMethod} ({booking.paymentStatus})</p>
-            <p className="text-sm font-semibold text-green-700">Amount: ${booking.amount}</p>
+            <p className="text-sm font-semibold text-green-700">Amount: Rs {booking.amount}</p>
           </div>
         ))}
       </div>

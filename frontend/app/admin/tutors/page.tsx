@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAllUsers, deleteUser } from "@/lib/api/admin/user";
 import Image from "next/image";
@@ -23,10 +23,13 @@ type Tutor = {
 
 export default function TutorManagementPage() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const router = useRouter();
+  const pageSize = 8;
 
   const fetchTutors = async () => {
     try {
@@ -45,6 +48,60 @@ export default function TutorManagementPage() {
   useEffect(() => {
     fetchTutors();
   }, []);
+
+  const filteredTutors = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase();
+    if (!term) return tutors;
+
+    return tutors.filter((tutor) => {
+      const name = tutor.fullName?.toLowerCase() || "";
+      const username = tutor.username?.toLowerCase() || "";
+      const email = tutor.email?.toLowerCase() || "";
+      const subject = tutor.subject?.toLowerCase() || "";
+      return name.includes(term) || username.includes(term) || email.includes(term) || subject.includes(term);
+    });
+  }, [searchQuery, tutors]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTutors.length / pageSize));
+
+  const paginatedTutors = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredTutors.slice(start, start + pageSize);
+  }, [currentPage, filteredTutors]);
+
+  const tutorStats = useMemo(() => {
+    const totalTutors = tutors.length;
+    const activeSubjects = new Set(
+      tutors
+        .map((item) => String(item.subject || "").trim())
+        .filter(Boolean)
+    ).size;
+
+    const pricedTutors = tutors.filter((item) => typeof item.pricePerHour === "number");
+    const avgPrice = pricedTutors.length
+      ? pricedTutors.reduce((sum, item) => sum + Number(item.pricePerHour || 0), 0) / pricedTutors.length
+      : 0;
+
+    const recentTutors = tutors.filter((item) => {
+      if (!item.createdAt) return false;
+      const createdAt = new Date(item.createdAt).getTime();
+      if (Number.isNaN(createdAt)) return false;
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      return createdAt >= sevenDaysAgo;
+    }).length;
+
+    return { totalTutors, activeSubjects, avgPrice, recentTutors };
+  }, [tutors]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const handleDelete = async (id: string, fullName: string) => {
     if (!confirm(`Are you sure you want to delete tutor "${fullName}"?`)) {
@@ -117,7 +174,35 @@ export default function TutorManagementPage() {
         </div>
       )}
 
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500">Total Tutors</p>
+          <p className="mt-1 text-2xl font-bold text-gray-800">{tutorStats.totalTutors}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500">Active Subjects</p>
+          <p className="mt-1 text-2xl font-bold text-indigo-700">{tutorStats.activeSubjects}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500">Avg. Hourly Price</p>
+          <p className="mt-1 text-2xl font-bold text-emerald-700">Rs {tutorStats.avgPrice.toFixed(2)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs text-gray-500">New (7 Days)</p>
+          <p className="mt-1 text-2xl font-bold text-blue-700">{tutorStats.recentTutors}</p>
+        </div>
+      </div>
+
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <input
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search tutors by name, username, email or subject"
+            className="w-full md:w-96 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+          />
+        </div>
+
         {loading ? (
           <div className="p-12 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -138,7 +223,7 @@ export default function TutorManagementPage() {
               </thead>
 
               <tbody className="divide-y divide-gray-200">
-                {tutors.map((tutor, index) => (
+                {paginatedTutors.map((tutor, index) => (
                   <tr key={tutor._id} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -182,7 +267,7 @@ export default function TutorManagementPage() {
                     </td>
                     <td className="px-4 py-3">
                       {tutor.pricePerHour !== undefined ? (
-                        <span className="text-gray-700 text-sm">${tutor.pricePerHour}/hr</span>
+                        <span className="text-gray-700 text-sm">Rs {tutor.pricePerHour}/hr</span>
                       ) : (
                         <span className="text-gray-400 text-sm">-</span>
                       )}
@@ -213,7 +298,7 @@ export default function TutorManagementPage() {
                   </tr>
                 ))}
 
-                {tutors.length === 0 && !loading && (
+                {filteredTutors.length === 0 && !loading && (
                   <tr>
                     <td colSpan={6} className="text-center py-12">
                       <p className="text-gray-500 font-medium text-lg">No tutors found</p>
@@ -223,6 +308,33 @@ export default function TutorManagementPage() {
                 )}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && filteredTutors.length > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 bg-gray-50">
+            <p className="text-sm text-gray-600">
+              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredTutors.length)} of {filteredTutors.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <span className="text-sm text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -1,12 +1,24 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { updateProfile } from "@/lib/api/auth";
+
+const normalizeAvailabilitySlots = (slots: any[] | undefined) => {
+  if (!Array.isArray(slots)) return [];
+  return slots
+    .map((slot) => {
+      const day = String(slot?.day || "").trim();
+      const times = Array.isArray(slot?.times) ? slot.times.map((time: string) => String(time).trim()).filter(Boolean) : [];
+      if (!day || times.length === 0) return null;
+      return { day, times };
+    })
+    .filter((slot): slot is { day: string; times: string[] } => !!slot);
+};
 
 export default function TutorProfilePage() {
   const { user, checkAuth } = useAuth();
-  const router = useRouter();
+  const initialAvailabilitySlots = useMemo(() => normalizeAvailabilitySlots(user?.availabilitySlots), [user?.availabilitySlots]);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     about: user?.about || "",
@@ -14,6 +26,10 @@ export default function TutorProfilePage() {
     pricePerHour: user?.pricePerHour || 0,
     responseTime: user?.responseTime || "24 hours",
   });
+  const [availabilityDate, setAvailabilityDate] = useState("");
+  const [availabilityTime, setAvailabilityTime] = useState("");
+  const [availabilityTimes, setAvailabilityTimes] = useState<string[]>([]);
+  const [availabilitySlots, setAvailabilitySlots] = useState<Array<{ day: string; times: string[] }>>(initialAvailabilitySlots);
   const [message, setMessage] = useState("");
 
   const handleInputChange = (
@@ -28,21 +44,78 @@ export default function TutorProfilePage() {
     }));
   };
 
+  const addAvailabilityTime = () => {
+    const time = availabilityTime.trim();
+    if (!time) {
+      throw new Error("Please choose a time");
+    }
+
+    if (availabilityTimes.includes(time)) {
+      throw new Error("Time already added");
+    }
+
+    setAvailabilityTimes((prev) => [...prev, time]);
+    setAvailabilityTime("");
+  };
+
+  const removeAvailabilityTime = (index: number) => {
+    setAvailabilityTimes((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const addAvailabilitySlot = () => {
+    const date = availabilityDate.trim();
+    if (!date) {
+      throw new Error("Please choose a date");
+    }
+
+    if (availabilityTimes.length === 0) {
+      throw new Error("Please add at least one time");
+    }
+
+    const nextSlots = [...availabilitySlots, { day: date, times: availabilityTimes }];
+    setAvailabilitySlots(nextSlots);
+    setAvailabilityDate("");
+    setAvailabilityTimes([]);
+  };
+
+  const removeAvailabilitySlot = (index: number) => {
+    setAvailabilitySlots((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const startEditing = () => {
+    setFormData({
+      about: user?.about || "",
+      experienceYears: user?.experienceYears || 0,
+      pricePerHour: user?.pricePerHour || 0,
+      responseTime: user?.responseTime || "24 hours",
+    });
+    setAvailabilitySlots(normalizeAvailabilitySlots(user?.availabilitySlots));
+    setAvailabilityDate("");
+    setAvailabilityTime("");
+    setAvailabilityTimes([]);
+    setIsEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setAvailabilitySlots(normalizeAvailabilitySlots(user?.availabilitySlots));
+    setAvailabilityDate("");
+    setAvailabilityTime("");
+    setAvailabilityTimes([]);
+  };
+
   const handleSave = async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
-      
-      const response = await fetch(`${baseUrl}/api/auth/update-profile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-        credentials: "include",
-      });
+      const payload = new FormData();
+      payload.append("about", String(formData.about || ""));
+      payload.append("experienceYears", String(formData.experienceYears || 0));
+      payload.append("pricePerHour", String(formData.pricePerHour || 0));
+      payload.append("responseTime", String(formData.responseTime || ""));
+      payload.append("availabilitySlots", JSON.stringify(availabilitySlots));
 
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
+      const response = await updateProfile(payload);
+      if (!response?.success) {
+        throw new Error(response?.message || "Failed to update profile");
       }
 
       await checkAuth();
@@ -120,7 +193,7 @@ export default function TutorProfilePage() {
           {/* Hourly Rate */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Hourly Rate ($)
+              Hourly Rate (Rs)
             </label>
             {isEditing ? (
               <input
@@ -132,9 +205,109 @@ export default function TutorProfilePage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               />
             ) : (
-              <p className="text-gray-700">${user?.pricePerHour || "0.00"}</p>
+              <p className="text-gray-700">Rs {user?.pricePerHour || "0.00"}</p>
             )}
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Availability Time
+            </label>
+            {isEditing ? (
+              <div className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                  <input
+                    type="date"
+                    value={availabilityDate}
+                    onChange={(event) => setAvailabilityDate(event.target.value)}
+                    className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                  />
+                  <input
+                    type="time"
+                    value={availabilityTime}
+                    onChange={(event) => setAvailabilityTime(event.target.value)}
+                    className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        addAvailabilityTime();
+                        setMessage("");
+                      } catch (error: Error | any) {
+                        setMessage(error.message || "Invalid time");
+                      }
+                    }}
+                    className="h-10 rounded-md bg-emerald-600 px-4 text-sm font-semibold text-white hover:bg-emerald-700"
+                  >
+                    Add Time
+                  </button>
+                </div>
+
+                {availabilityTimes.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {availabilityTimes.map((time, index) => (
+                      <button
+                        key={`${time}-${index}`}
+                        type="button"
+                        onClick={() => removeAvailabilityTime(index)}
+                        className="rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-xs text-gray-700 hover:bg-gray-200"
+                      >
+                        {time} x
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      addAvailabilitySlot();
+                      setMessage("");
+                    } catch (error: Error | any) {
+                      setMessage(error.message || "Invalid availability");
+                    }
+                  }}
+                  className="h-10 w-full rounded-md border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                  Add Date
+                </button>
+
+                <div className="space-y-2">
+                  {availabilitySlots.length > 0 ? (
+                    availabilitySlots.map((slot, index) => (
+                      <div key={`${slot.day}-${index}`} className="flex items-center justify-between rounded-md border border-gray-300 px-3 py-2 text-sm">
+                        <span>{slot.day} - {slot.times.join(", ")}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeAvailabilitySlot(index)}
+                          className="text-red-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-gray-500">No availability added yet.</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1 text-gray-700">
+                {Array.isArray(user?.availabilitySlots) && user.availabilitySlots.length > 0 ? (
+                  user.availabilitySlots.map((slot: any, index: number) => (
+                    <p key={`${slot?.day || "day"}-${index}`}>
+                      <span className="font-semibold">{slot?.day}:</span> {Array.isArray(slot?.times) ? slot.times.join(", ") : "-"}
+                    </p>
+                  ))
+                ) : (
+                  <p>Not specified</p>
+                )}
+              </div>
+            )}
+          </div>
+
 
           {/* Response Time */}
           <div>
@@ -186,7 +359,7 @@ export default function TutorProfilePage() {
                   Save Changes
                 </button>
                 <button
-                  onClick={() => setIsEditing(false)}
+                  onClick={cancelEditing}
                   className="px-6 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 transition"
                 >
                   Cancel
@@ -194,7 +367,7 @@ export default function TutorProfilePage() {
               </>
             ) : (
               <button
-                onClick={() => setIsEditing(true)}
+                onClick={startEditing}
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
               >
                 Edit Profile

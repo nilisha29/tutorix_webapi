@@ -169,7 +169,7 @@ export default function HomePage() {
                   <p className="text-xs text-slate-500">{tutor.subject || "Tutor"}</p>
                 </div>
                 <div className="mt-4 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">${tutor.pricePerHour ?? 0}/hr</span>
+                  <span className="text-sm font-semibold text-slate-900">Rs {tutor.pricePerHour ?? 0}/hr</span>
                   <Link
                     href={`/tutors/${tutor._id}`}
                     className="px-3 py-1.5 rounded-full border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50"
@@ -214,7 +214,7 @@ export default function HomePage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-base font-semibold text-slate-900">${tutor.pricePerHour ?? 0}/hr</p>
+                    <p className="text-base font-semibold text-slate-900">Rs {tutor.pricePerHour ?? 0}/hr</p>
                     <p className="text-xs text-slate-500">★ {(tutor.rating ?? 0).toFixed(1)} ({tutor.reviewsCount ?? 0})</p>
                   </div>
                 </div>

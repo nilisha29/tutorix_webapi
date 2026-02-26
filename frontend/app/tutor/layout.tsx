@@ -25,7 +25,7 @@ export default async function TutorLayout({
       </div>
       <div className="w-full xl:ml-64">
         <TutorHeader />
-        <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 p-6">
+        <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 p-6 pt-22">
           {children}
         </main>
       </div>

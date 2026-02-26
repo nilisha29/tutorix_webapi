@@ -1219,7 +1219,7 @@ export default function TutorsPage() {
 
                       {tutor.pricePerHour !== undefined && (
                         <p className="mt-3 text-base font-bold text-green-600">
-                          ${tutor.pricePerHour}
+                          Rs {tutor.pricePerHour}
                           <span className="text-sm text-slate-500">
                             {" "}
                             / hour

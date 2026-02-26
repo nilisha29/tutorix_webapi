@@ -5,6 +5,8 @@ import { PORT } from './config';
 import authRoutes from "./routes/auth.route";
 import tutorRoutes from "./routes/tutor.route";
 import bookingRoutes from "./routes/booking.route";
+import messageRoutes from "./routes/message.route";
+import savedTutorRoutes from "./routes/saved-tutor.route";
 import cors from 'cors';
 import path from 'path';
 
@@ -39,6 +41,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/tutors', tutorRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/saved-tutors', savedTutorRoutes);
 
 app.use('/api/admin/users', adminUserRoutes);
 

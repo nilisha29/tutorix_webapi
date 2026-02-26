@@ -7,6 +7,8 @@ const TUTOR_LINKS = [
   { href: "/tutor/dashboard", label: "Dashboard" },
   { href: "/tutor/profile", label: "Profile" },
   { href: "/tutor/bookings", label: "Bookings" },
+  { href: "/tutor/messages", label: "Messages" },
+  { href: "/tutor/reviews", label: "Reviews" },
   { href: "/tutor/earnings", label: "Earnings" },
 ];
 

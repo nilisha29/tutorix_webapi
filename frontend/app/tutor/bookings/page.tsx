@@ -41,18 +41,36 @@ export default function TutorBookingsPage() {
           </div>
         )}
 
-        <div className="space-y-3">
-          {bookings.map((booking) => (
-            <div key={booking._id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <p className="font-semibold text-gray-800">Student: {booking.studentId?.fullName || "Student"}</p>
-              <p className="text-sm text-gray-600">Date: {booking.date}</p>
-              <p className="text-sm text-gray-600">Time: {booking.time}</p>
-              <p className="text-sm text-gray-600">Duration: {booking.duration}</p>
-              <p className="text-sm text-gray-600">Payment: {booking.paymentMethod} ({booking.paymentStatus})</p>
-              <p className="text-sm font-semibold text-green-700">Amount: ${booking.amount}</p>
-            </div>
-          ))}
-        </div>
+        {!loading && !error && bookings.length > 0 && (
+          <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <table className="min-w-full bg-white">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Student</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Duration</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Payment</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Booking</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.map((booking) => (
+                  <tr key={booking._id} className="border-t border-gray-200 hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-800">{booking.studentId?.fullName || "Student"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.date}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.time}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.duration}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.paymentMethod} ({booking.paymentStatus})</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.bookingStatus || "pending"}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-green-700">Rs {booking.amount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Future implementation can include:

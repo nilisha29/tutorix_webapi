@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { getAllUsers, updateTutorReview, deleteTutorReview } from "@/lib/api/admin/user";
 
@@ -29,6 +29,8 @@ type UserLite = {
 export default function AdminReviewsPage() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [userMap, setUserMap] = useState<Record<string, UserLite>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingKey, setEditingKey] = useState<string | null>(null);
@@ -36,6 +38,7 @@ export default function AdminReviewsPage() {
   const [editRating, setEditRating] = useState(5);
   const [saving, setSaving] = useState(false);
   const [deletingKey, setDeletingKey] = useState<string | null>(null);
+  const pageSize = 10;
 
   const getProfileImageUrl = (profileImage?: string) => {
     if (!profileImage) return null;
@@ -114,11 +117,70 @@ export default function AdminReviewsPage() {
     }
   };
 
+  const reviewRows = useMemo(() => {
+    return tutors.flatMap((tutor) =>
+      (tutor.reviews || []).map((review, index) => ({
+        tutorId: tutor._id,
+        tutorName: tutor.fullName,
+        tutorUsername: tutor.username,
+        review,
+        index,
+        key: reviewKey(tutor._id, review.reviewerId, index),
+      }))
+    );
+  }, [tutors]);
+
+  const filteredReviewRows = useMemo(() => {
+    const term = searchQuery.trim().toLowerCase();
+    if (!term) return reviewRows;
+
+    return reviewRows.filter((row) => {
+      const tutorName = String(row.tutorName || "").toLowerCase();
+      const tutorUsername = String(row.tutorUsername || "").toLowerCase();
+      const reviewerName = String(row.review.name || "").toLowerCase();
+      const detail = String(row.review.detail || "").toLowerCase();
+      const quote = String(row.review.quote || "").toLowerCase();
+      return (
+        tutorName.includes(term) ||
+        tutorUsername.includes(term) ||
+        reviewerName.includes(term) ||
+        detail.includes(term) ||
+        quote.includes(term)
+      );
+    });
+  }, [reviewRows, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredReviewRows.length / pageSize));
+
+  const paginatedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredReviewRows.slice(start, start + pageSize);
+  }, [currentPage, filteredReviewRows]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   return (
     <div className="space-y-6 p-6">
       <div>
         <h2 className="text-3xl font-bold text-gray-800 mb-1">Reviews Management</h2>
         <p className="text-gray-600">View, edit and delete tutor reviews</p>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <input
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search by tutor, reviewer, detail or review text"
+          className="w-full md:w-96 rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-200"
+        />
       </div>
 
       {error && (
@@ -129,115 +191,145 @@ export default function AdminReviewsPage() {
 
       {loading ? (
         <div className="p-10 text-center text-gray-500">Loading reviews...</div>
-      ) : tutors.length === 0 ? (
+      ) : filteredReviewRows.length === 0 ? (
         <div className="p-10 text-center text-gray-500 bg-white rounded-xl border">No reviews found</div>
       ) : (
-        <div className="space-y-6">
-          {tutors.map((tutor) => (
-            <div key={tutor._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">{tutor.fullName} <span className="text-sm text-gray-500">@{tutor.username}</span></h3>
-              <div className="space-y-4">
-                {(tutor.reviews || []).map((review, index) => {
-                  const key = reviewKey(tutor._id, review.reviewerId, index);
-                  const isEditing = editingKey === key;
-                  const img = review.profileImage || (review.reviewerId ? userMap[review.reviewerId]?.profileImage : undefined);
-                  return (
-                    <div key={key} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          {img ? (
-                            <Image
-                              src={getProfileImageUrl(img) || ""}
-                              alt={review.name}
-                              width={40}
-                              height={40}
-                              className="h-10 w-10 rounded-full object-cover border border-gray-200"
-                            />
-                          ) : (
-                            <div className="h-10 w-10 rounded-full bg-gray-300 text-white flex items-center justify-center font-semibold">
-                              {review.name?.charAt(0)?.toUpperCase() || "U"}
-                            </div>
-                          )}
-                          <div>
-                            <p className="text-sm font-semibold text-gray-800">{review.name}</p>
-                            <p className="text-xs text-gray-500">{review.detail}</p>
-                          </div>
-                        </div>
-                        <div className="flex text-yellow-500">
-                          {Array.from({ length: 5 }).map((_, starIndex) => {
-                            const active = starIndex < (review.rating || 5);
-                            return (
-                              <svg key={starIndex} className={`h-4 w-4 ${active ? "text-yellow-500" : "text-gray-300"}`} viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2l2.7 5.6 6.2.9-4.5 4.4 1.1 6.1L12 16.8 6.5 19l1.1-6.1L3 8.5l6.3-.9L12 2z" />
-                              </svg>
-                            );
-                          })}
-                        </div>
-                      </div>
+        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Tutor</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Reviewer</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Detail</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Review</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Rating</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {paginatedRows.map((row) => {
+                const { tutorId, tutorName, tutorUsername, review, key, index } = row;
+                const isEditing = editingKey === key;
+                const img = review.profileImage || (review.reviewerId ? userMap[review.reviewerId]?.profileImage : undefined);
 
-                      {isEditing ? (
-                        <div className="mt-3 space-y-3">
-                          <textarea
-                            value={editQuote}
-                            onChange={(event) => setEditQuote(event.target.value)}
-                            rows={3}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                return (
+                  <tr key={key} className="hover:bg-gray-50 align-top">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-800">
+                      {tutorName}
+                      <div className="text-xs text-gray-500">@{tutorUsername}</div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      <div className="flex items-center gap-2">
+                        {img ? (
+                          <Image
+                            src={getProfileImageUrl(img) || ""}
+                            alt={review.name}
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 rounded-full object-cover border border-gray-200"
                           />
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-600">Rating:</span>
-                            <select
-                              value={editRating}
-                              onChange={(event) => setEditRating(Number(event.target.value))}
-                              className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-                            >
-                              {[1, 2, 3, 4, 5].map((rate) => (
-                                <option key={rate} value={rate}>{rate}</option>
-                              ))}
-                            </select>
+                        ) : (
+                          <div className="h-7 w-7 rounded-full bg-gray-300 text-white flex items-center justify-center text-xs font-semibold">
+                            {review.name?.charAt(0)?.toUpperCase() || "U"}
                           </div>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => saveEdit(tutor._id, review.reviewerId)}
-                              disabled={saving}
-                              className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
-                            >
-                              {saving ? "Saving..." : "Save"}
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                        )}
+                        <span>{review.name || "User"}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{review.detail || "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 min-w-65">
+                      {isEditing ? (
+                        <textarea
+                          value={editQuote}
+                          onChange={(event) => setEditQuote(event.target.value)}
+                          rows={3}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+                        />
+                      ) : (
+                        review.quote || "-"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-yellow-700 whitespace-nowrap">
+                      {isEditing ? (
+                        <select
+                          value={editRating}
+                          onChange={(event) => setEditRating(Number(event.target.value))}
+                          className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+                        >
+                          {[1, 2, 3, 4, 5].map((rate) => (
+                            <option key={rate} value={rate}>{rate}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        `${review.rating || 5}/5`
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {isEditing ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => saveEdit(tutorId, review.reviewerId)}
+                            disabled={saving}
+                            className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                          >
+                            {saving ? "Saving..." : "Save"}
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                          >
+                            Cancel
+                          </button>
                         </div>
                       ) : (
-                        <>
-                          <p className="mt-3 text-sm text-gray-700">{review.quote}</p>
-                          <div className="mt-3 flex items-center gap-2">
-                            <button
-                              onClick={() => startEdit(tutor._id, review, index)}
-                              disabled={!review.reviewerId}
-                              className="rounded-md bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => removeReview(tutor._id, review.reviewerId, index)}
-                              disabled={!review.reviewerId || deletingKey === key}
-                              className="rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50"
-                            >
-                              {deletingKey === key ? "Deleting..." : "Delete"}
-                            </button>
-                          </div>
-                        </>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => startEdit(tutorId, review, index)}
+                            disabled={!review.reviewerId}
+                            className="rounded-md bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => removeReview(tutorId, review.reviewerId, index)}
+                            disabled={!review.reviewerId || deletingKey === key}
+                            className="rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200 disabled:opacity-50"
+                          >
+                            {deletingKey === key ? "Deleting..." : "Delete"}
+                          </button>
+                        </div>
                       )}
-                    </div>
-                  );
-                })}
-              </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 bg-gray-50">
+            <p className="text-sm text-gray-600">
+              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredReviewRows.length)} of {filteredReviewRows.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Prev
+              </button>
+              <span className="text-sm text-gray-700">Page {currentPage} of {totalPages}</span>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>

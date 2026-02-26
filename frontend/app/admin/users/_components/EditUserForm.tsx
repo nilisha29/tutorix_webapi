@@ -293,7 +293,7 @@ export default function EditUserForm({ userId, initialData }: EditUserFormProps)
             </div>
 
             <div className="space-y-1">
-              <label className="text-sm font-medium" htmlFor="pricePerHour">Price per Hour ($)</label>
+              <label className="text-sm font-medium" htmlFor="pricePerHour">Price per Hour (Rs)</label>
               <input
                 id="pricePerHour"
                 type="number"

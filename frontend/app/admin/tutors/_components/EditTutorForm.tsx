@@ -315,7 +315,7 @@ export default function EditTutorForm({ tutorId, initialData }: EditTutorFormPro
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-medium" htmlFor="pricePerHour">Price per Hour ($)</label>
+            <label className="text-sm font-medium" htmlFor="pricePerHour">Price per Hour (Rs)</label>
             <input
               id="pricePerHour"
               type="number"

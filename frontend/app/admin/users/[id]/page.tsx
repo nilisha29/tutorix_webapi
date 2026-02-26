@@ -138,8 +138,8 @@ export default function UserDetailPage() {
                 className="rounded-full mx-auto mb-4 border-4 border-blue-200 shadow-sm"
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-4xl border-4 border-blue-200 shadow-sm mx-auto mb-4">
-                {user.fullName.charAt(0).toUpperCase()}
+                  <div className="w-32 h-32 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-4xl border-4 border-blue-200 shadow-sm mx-auto mb-4">
+                  {user.fullName.charAt(0).toUpperCase()}
               </div>
             )}
             <h3 className="text-2xl font-bold text-gray-800">{user.fullName}</h3>
@@ -202,7 +202,7 @@ export default function UserDetailPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Price per Hour</label>
-                    <p className="text-gray-700 text-sm">${user.pricePerHour || "N/A"}</p>
+                    <p className="text-gray-700 text-sm">Rs {user.pricePerHour || "N/A"}</p>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Experience Years</label>

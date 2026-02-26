@@ -61,8 +61,10 @@ import { usePathname } from "next/navigation";
 const ADMIN_LINKS = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/users", label: "Users" },
+  { href: "/admin/profile", label: "Profile" },
   { href: "/admin/tutors", label: "Tutors" },
   { href: "/admin/bookings", label: "Bookings" },
+  { href: "/admin/payments", label: "Payments" },
   { href: "/admin/reviews", label: "Reviews" },
 ];
 

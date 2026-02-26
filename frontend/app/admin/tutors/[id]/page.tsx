@@ -201,7 +201,7 @@ export default function TutorDetailPage() {
                 className="rounded-full mx-auto mb-4 border-4 border-green-200 shadow-sm"
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-4xl border-4 border-green-200 shadow-sm mx-auto mb-4">
+              <div className="w-32 h-32 rounded-full bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white font-bold text-4xl border-4 border-green-200 shadow-sm mx-auto mb-4">
                 {tutor.fullName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -253,7 +253,7 @@ export default function TutorDetailPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Price per Hour</label>
-                <p className="text-gray-700 text-sm font-semibold text-green-600">${tutor.pricePerHour || "N/A"}</p>
+                <p className="text-sm font-semibold text-green-600">Rs {tutor.pricePerHour || "N/A"}</p>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Experience Years</label>
