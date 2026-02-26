@@ -161,6 +161,7 @@ export default function Navbar() {
                     }
                     return null;
                   })()}
+   
                   
                   {/* Show Become a Tutor if user is NOT a tutor */}
                   {(() => {
