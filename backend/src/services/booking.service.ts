@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import crypto from "crypto";
 import { HttpError } from "../errors/http-error";
 import { BookingRepository } from "../repositories/booking.repository";
 import { UserRepository } from "../repositories/user.repository";
@@ -58,17 +57,6 @@ export class BookingService {
       amount: number;
     }
   ) {
-    const esewaLink = process.env.ESEWA_CHECKOUT_LINK || process.env.NEXT_PUBLIC_ESEWA_CHECKOUT_LINK;
-    const khaltiLink = process.env.KHALTI_CHECKOUT_LINK || process.env.NEXT_PUBLIC_KHALTI_CHECKOUT_LINK;
-
-    if (payload.paymentMethod === "esewa" && !esewaLink) {
-      throw new HttpError(400, "eSewa link is not configured. Set ESEWA_CHECKOUT_LINK in backend env.");
-    }
-
-    if (payload.paymentMethod === "khalti" && !khaltiLink) {
-      throw new HttpError(400, "Khalti link is not configured. Set KHALTI_CHECKOUT_LINK in backend env.");
-    }
-
     const paymentRef = `PAY-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
     const booking = await this.createBooking(studentId, {
@@ -84,54 +72,9 @@ export class BookingService {
     const successUrl = `${frontendBaseUrl}/payment/result?bookingId=${booking._id}&ref=${encodeURIComponent(paymentRef)}&method=${payload.paymentMethod}&status=success`;
     const failureUrl = `${frontendBaseUrl}/payment/result?bookingId=${booking._id}&ref=${encodeURIComponent(paymentRef)}&method=${payload.paymentMethod}&status=failed`;
 
-    let redirectUrl = "";
-    let redirectMethod: "GET" | "POST" = "GET";
-    let redirectFormFields: Record<string, string> | undefined;
-
-    if (payload.paymentMethod === "esewa") {
-      if (!esewaLink) {
-        throw new HttpError(400, "eSewa link is not configured");
-      }
-
-      const productCode = process.env.ESEWA_PRODUCT_CODE;
-      const secretKey = process.env.ESEWA_SECRET_KEY;
-
-      if (!productCode || !secretKey) {
-        throw new HttpError(400, "eSewa credentials missing. Set ESEWA_PRODUCT_CODE and ESEWA_SECRET_KEY in backend env.");
-      }
-
-      const totalAmount = Number(payload.amount).toFixed(2);
-      const signedFieldNames = "total_amount,transaction_uuid,product_code";
-      const signMessage = `total_amount=${totalAmount},transaction_uuid=${paymentRef},product_code=${productCode}`;
-      const signature = crypto
-        .createHmac("sha256", secretKey)
-        .update(signMessage)
-        .digest("base64");
-
-      redirectUrl = esewaLink;
-      redirectMethod = "POST";
-      redirectFormFields = {
-        amount: totalAmount,
-        tax_amount: "0",
-        total_amount: totalAmount,
-        transaction_uuid: paymentRef,
-        product_code: productCode,
-        product_service_charge: "0",
-        product_delivery_charge: "0",
-        success_url: successUrl,
-        failure_url: failureUrl,
-        signed_field_names: signedFieldNames,
-        signature,
-      };
-    }
-
-    if (payload.paymentMethod === "khalti") {
-      if (!khaltiLink) {
-        throw new HttpError(400, "Khalti link is not configured");
-      }
-
-      redirectUrl = `${khaltiLink}${khaltiLink.includes("?") ? "&" : "?"}amount=${encodeURIComponent(String(payload.amount))}&ref=${encodeURIComponent(paymentRef)}&return_url=${encodeURIComponent(successUrl)}`;
-    }
+    const redirectUrl = `${frontendBaseUrl}/payment/checkout?bookingId=${booking._id}&ref=${encodeURIComponent(paymentRef)}&method=${payload.paymentMethod}&amount=${encodeURIComponent(String(payload.amount))}`;
+    const redirectMethod: "GET" | "POST" = "GET";
+    const redirectFormFields: Record<string, string> | undefined = undefined;
 
     return {
       booking,

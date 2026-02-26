@@ -17,6 +17,7 @@ export interface IBooking extends Document {
   bookingStatus: BookingStatus;
 }
 
+
 const BookingSchema = new Schema<IBooking>(
   {
     studentId: {

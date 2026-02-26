@@ -497,6 +497,8 @@ export default function TutorDetailPage() {
   const totalPrice = (pricePerHour * durationInMinutes) / 60;
   const totalPriceLabel = Number.isInteger(totalPrice) ? `${totalPrice}` : totalPrice.toFixed(2);
   const handleBookAndPay = async () => {
+    const paymentMethod = selectedPaymentMethod;
+
     if (!isAuthenticated) {
       toast.error("Please login first to book and pay");
       return;
@@ -505,7 +507,7 @@ export default function TutorDetailPage() {
       toast.error("Please select date and time");
       return;
     }
-    if (!selectedPaymentMethod) {
+    if (!paymentMethod) {
       toast.error("Please choose a payment method");
       return;
     }
@@ -518,7 +520,7 @@ export default function TutorDetailPage() {
         date: selectedDate,
         time: selectedTime,
         duration: selectedDuration,
-        paymentMethod: selectedPaymentMethod,
+        paymentMethod,
         amount: Number(totalPriceLabel),
       });
 
@@ -894,6 +896,7 @@ export default function TutorDetailPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedPaymentMethod("esewa")}
+                      disabled={processingPayment}
                       className={selectedPaymentMethod === "esewa" ? "rounded-xl bg-green-600 px-3 py-2 text-sm font-semibold text-white" : "rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"}
                     >
                       eSewa
@@ -901,6 +904,7 @@ export default function TutorDetailPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedPaymentMethod("khalti")}
+                      disabled={processingPayment}
                       className={selectedPaymentMethod === "khalti" ? "rounded-xl bg-purple-600 px-3 py-2 text-sm font-semibold text-white" : "rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700"}
                     >
                       Khalti
@@ -946,7 +950,7 @@ export default function TutorDetailPage() {
 
                 <button
                   type="button"
-                  onClick={handleBookAndPay}
+                  onClick={() => handleBookAndPay()}
                   disabled={processingPayment}
                   className="mt-6 w-full rounded-xl bg-emerald-600 text-white py-3 text-2xl font-semibold hover:bg-emerald-700 transition shadow-md disabled:opacity-60"
                 >
