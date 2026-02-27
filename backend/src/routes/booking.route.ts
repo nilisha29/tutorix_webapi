@@ -5,6 +5,7 @@ import { adminOnlyMiddleware, authorizedMiddleware } from "../middlewares/author
 const router = Router();
 const bookingController = new BookingController();
 
+
 router.post("/", authorizedMiddleware, bookingController.createBooking);
 router.post("/payments/initiate", authorizedMiddleware, bookingController.initiatePayment);
 router.post("/payments/verify", authorizedMiddleware, bookingController.verifyPayment);
