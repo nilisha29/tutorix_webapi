@@ -14,7 +14,6 @@ declare global{
 }
 let userRepository = new UserRepository();
 
-
 export const authorizedMiddleware = async(req: Request, res: Response, next: NextFunction) => {
     try{
         const authHeader = req.headers.authorization;
