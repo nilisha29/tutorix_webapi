@@ -308,6 +308,7 @@ export default function AdminReviewsPage() {
             </table>
           </div>
 
+
           <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 bg-gray-50">
             <p className="text-sm text-gray-600">
               Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredReviewRows.length)} of {filteredReviewRows.length}
