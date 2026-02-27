@@ -73,8 +73,7 @@ export default function Sidebar() {
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === href : pathname.startsWith(href);
-
-  
+ 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50">
 

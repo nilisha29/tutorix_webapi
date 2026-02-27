@@ -224,7 +224,6 @@ const dateFromAny = (value?: string) => {
   return null;
 };
 
-
 export default function AdminDashboard() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
