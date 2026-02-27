@@ -51,6 +51,7 @@ import { useAuth } from "@/context/AuthContext";
 export default function Header() {
   const { logout, user } = useAuth();
 
+  
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
       <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
