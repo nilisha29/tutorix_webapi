@@ -3,6 +3,7 @@ import { AuthController } from "../controllers/auth.controller";
 import { authorizedMiddleware, adminOnlyMiddleware } from "../middlewares/authorization.middleware";
 import { uploads } from "../middlewares/upload.middleware";
 import { AdminUserController } from "../controllers/admin/user.controller";
+import passwordRoutes from "./auth/password.route";
 
 let authController = new AuthController();
 let adminUserController = new AdminUserController();
@@ -10,8 +11,7 @@ const router = Router();
 
 // router.post("/register", authController.register)
 router.post("/login", authController.login)
-router.post("/forgot-password", authController.forgotPassword)
-router.post("/reset-password", authController.resetPassword)
+router.use(passwordRoutes)
 // add remaning routes like login, logout, etc.
 
 router.post(

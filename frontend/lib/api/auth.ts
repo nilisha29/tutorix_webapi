@@ -68,6 +68,19 @@ export const resetPassword = async (payload: { token: string; password: string }
   }
 };
 
+export const changePassword = async (payload: { currentPassword: string; newPassword: string }) => {
+  try {
+    const response = await axios.put(API.AUTH.CHANGE_PASSWORD, payload);
+    return response.data;
+  } catch (err: Error | any) {
+    throw new Error(
+      err.response?.data?.message ||
+      err.message ||
+      "Change password failed"
+    );
+  }
+};
+
 export const whoAmI = async () => {
   try {
     const response = await axios.get(API.AUTH.WHOAMI);

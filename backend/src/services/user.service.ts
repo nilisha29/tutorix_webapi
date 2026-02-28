@@ -485,4 +485,33 @@ export class UserService {
 
     return await this.resetPassword(token, newPassword);
   }
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await userRepository.getUserById(userId);
+    if (!user) {
+      throw new HttpError(404, "User not found");
+    }
+
+    const currentMatches = await bcryptjs.compare(currentPassword, user.password);
+    if (!currentMatches) {
+      throw new HttpError(400, "Current password is incorrect");
+    }
+
+    if (newPassword.length < 6) {
+      throw new HttpError(400, "New password must be at least 6 characters");
+    }
+
+    const isSameAsCurrent = await bcryptjs.compare(newPassword, user.password);
+    if (isSameAsCurrent) {
+      throw new HttpError(400, "New password must be different from current password");
+    }
+
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await userRepository.updateUser(String(user._id), { password: hashedPassword } as any);
+
+    return {
+      success: true,
+      message: "Password changed successfully",
+    };
+  }
 }

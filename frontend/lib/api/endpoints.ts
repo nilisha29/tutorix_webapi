@@ -6,6 +6,7 @@ export const API = {
         LOGIN: "/api/auth/login",
         FORGOT_PASSWORD: "/api/auth/forgot-password",
         RESET_PASSWORD: "/api/auth/reset-password",
+        CHANGE_PASSWORD: "/api/auth/change-password",
         WHOAMI: "/api/auth/whoami",
         UPDATE_PROFILE: "/api/auth/update-profile",
         BECOME_TUTOR: "/api/auth/become-tutor",

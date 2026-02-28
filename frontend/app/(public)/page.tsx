@@ -218,9 +218,12 @@ export default function HomePage() {
                     <p className="text-xs text-slate-500">★ {(tutor.rating ?? 0).toFixed(1)} ({tutor.reviewsCount ?? 0})</p>
                   </div>
                 </div>
-                <button className="mt-4 w-full rounded-full bg-slate-900 text-white text-xs font-semibold py-2.5 hover:bg-slate-800">
+                <Link
+                  href={`/tutors/${tutor._id}`}
+                  className="mt-4 w-full inline-flex items-center justify-center rounded-full bg-slate-900 text-white text-xs font-semibold py-2.5 hover:bg-slate-800"
+                >
                   Book Trial Lesson
-                </button>
+                </Link>
               </div>
             ))}
           </div>
