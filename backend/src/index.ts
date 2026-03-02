@@ -55,9 +55,12 @@ async function startServer() {
     await connectDatabase();
 
     app.listen(
-        PORT,
+        PORT,  
+        //  '0.0.0.0',
         () => {
             console.log(`Server: http://localhost:${PORT}`);
+            // console.log(`Server running at http://0.0.0.0:${PORT}`);
+            // console.log(`Access from LAN at http://192.168.1.9:${PORT}`);
         }
     );
 }

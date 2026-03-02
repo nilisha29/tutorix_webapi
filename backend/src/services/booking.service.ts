@@ -2,9 +2,11 @@ import mongoose from "mongoose";
 import { HttpError } from "../errors/http-error";
 import { BookingRepository } from "../repositories/booking.repository";
 import { UserRepository } from "../repositories/user.repository";
+import { PaymentRepository } from "../repositories/payment.repository";
 
 const bookingRepository = new BookingRepository();
 const userRepository = new UserRepository();
+const paymentRepository = new PaymentRepository();
 
 export class BookingService {
   async createBooking(
@@ -65,8 +67,7 @@ export class BookingService {
       bookingStatus: "pending",
     });
 
-    booking.paymentRef = paymentRef;
-    await booking.save();
+    await paymentRepository.setPaymentReference(String(booking._id), paymentRef);
 
     const frontendBaseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
     const successUrl = `${frontendBaseUrl}/payment/result?bookingId=${booking._id}&ref=${encodeURIComponent(paymentRef)}&method=${payload.paymentMethod}&status=success`;
@@ -95,7 +96,7 @@ export class BookingService {
       gatewayTxnId?: string;
     }
   ) {
-    const booking = await bookingRepository.getBookingById(payload.bookingId);
+    const booking = await paymentRepository.getBookingById(payload.bookingId);
     if (!booking) {
       throw new HttpError(404, "Booking not found");
     }
@@ -107,7 +108,7 @@ export class BookingService {
     const normalizedStatus = (payload.status || "").toLowerCase();
     const isSuccess = ["success", "paid", "complete", "completed"].includes(normalizedStatus);
 
-    const updatedBooking = await bookingRepository.updatePaymentStatus(payload.bookingId, {
+    const updatedBooking = await paymentRepository.updatePaymentVerification(payload.bookingId, {
       paymentStatus: isSuccess ? "paid" : "failed",
       bookingStatus: isSuccess ? "confirmed" : "pending",
       gatewayTxnId: payload.gatewayTxnId,

@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { UserType } from "../types/user.type";
+import { ReviewSchema } from "./review.model";
 
 
 const UserSchema: Schema = new Schema<UserType>(
@@ -101,16 +102,7 @@ const UserSchema: Schema = new Schema<UserType>(
       default: [],
     },
     reviews: {
-      type: [
-        {
-          reviewerId: { type: String, required: false },
-          name: { type: String, required: true },
-          detail: { type: String, required: true },
-          profileImage: { type: String, required: false },
-          quote: { type: String, required: true },
-          rating: { type: Number, required: false, min: 1, max: 5 },
-        },
-      ],
+      type: [ReviewSchema],
       default: [],
     },
     // username: {

@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { HttpError } from "../errors/http-error";
-import { MessageModel } from "../models/message.model";
 import { UserRepository } from "../repositories/user.repository";
+import { MessageRepository } from "../repositories/message.repository";
 
 const userRepository = new UserRepository();
+const messageRepository = new MessageRepository();
 
 export class MessageService {
   async sendMessage(studentId: string, tutorId: string, content: string) {
@@ -25,17 +26,7 @@ export class MessageService {
       throw new HttpError(400, "Message content is required");
     }
 
-    const message = await MessageModel.create({
-      studentId: new mongoose.Types.ObjectId(studentId),
-      tutorId: new mongoose.Types.ObjectId(tutorId),
-      content: trimmedContent,
-      isRead: false,
-    });
-
-    return await MessageModel.findById(message._id)
-      .populate("studentId", "fullName username profileImage")
-      .populate("tutorId", "fullName username profileImage")
-      .exec();
+    return await messageRepository.createMessage(studentId, tutorId, trimmedContent);
   }
 
   async getTutorMessages(tutorId: string) {
@@ -43,10 +34,7 @@ export class MessageService {
       throw new HttpError(400, "Invalid tutor id");
     }
 
-    return await MessageModel.find({ tutorId: new mongoose.Types.ObjectId(tutorId) })
-      .populate("studentId", "fullName username profileImage")
-      .sort({ createdAt: -1 })
-      .exec();
+    return await messageRepository.getMessagesByTutorId(tutorId);
   }
 
   async deleteTutorMessage(tutorId: string, messageId: string) {
@@ -58,10 +46,7 @@ export class MessageService {
       throw new HttpError(400, "Invalid message id");
     }
 
-    const deletedMessage = await MessageModel.findOneAndDelete({
-      _id: new mongoose.Types.ObjectId(messageId),
-      tutorId: new mongoose.Types.ObjectId(tutorId),
-    }).exec();
+    const deletedMessage = await messageRepository.deleteTutorMessage(tutorId, messageId);
 
     if (!deletedMessage) {
       throw new HttpError(404, "Message not found");

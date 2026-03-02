@@ -4,6 +4,8 @@ import { authorizedMiddleware, adminOnlyMiddleware } from "../middlewares/author
 import { uploads } from "../middlewares/upload.middleware";
 import { AdminUserController } from "../controllers/admin/user.controller";
 import passwordRoutes from "./auth/password.route";
+import authTutorRoutes from "./auth/tutor.route";
+import authProfileRoutes from "./auth/profile.route";
 
 let authController = new AuthController();
 let adminUserController = new AdminUserController();
@@ -12,6 +14,8 @@ const router = Router();
 // router.post("/register", authController.register)
 router.post("/login", authController.login)
 router.use(passwordRoutes)
+router.use(authTutorRoutes)
+router.use(authProfileRoutes)
 // add remaning routes like login, logout, etc.
 
 router.post(
@@ -29,27 +33,10 @@ router.post(
 );
 
 router.put(
-    "/update-profile",
-    authorizedMiddleware,
-    uploads.single("profileImage"), // "profileImage" - field name from frontend/client
-    authController.updateProfile
-)
-
-router.put(
-  "/become-tutor",
-  authorizedMiddleware,
-  uploads.single("profileImage"),
-  authController.becomeTutor
-);
-
-router.put(
   "/:id",
   authorizedMiddleware,
   uploads.single("profileImage"),
   authController.updateUserById
 );
-
-router.get("/whoami", authorizedMiddleware, authController.getProfile);
-router.get("/tutors", authController.getTutors);
 
 export default router;

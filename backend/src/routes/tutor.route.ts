@@ -1,11 +1,11 @@
 import { Router } from "express";
-import { AuthController } from "../controllers/auth.controller";
-import { authorizedMiddleware } from "../middlewares/authorization.middleware";
+import { TutorController } from "../controllers/tutor.controller";
+import tutorReviewRoutes from "./tutor/review.route";
 
 const router = Router();
-const authController = new AuthController();
+const tutorController = new TutorController();
 
-router.get("/:id", authController.getTutorById);
-router.post("/:id/reviews", authorizedMiddleware, authController.addTutorReview);
+router.get("/:id", tutorController.getTutorById);
+router.use("/:id/reviews", tutorReviewRoutes);
 
 export default router;

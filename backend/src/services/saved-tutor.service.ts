@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import { HttpError } from "../errors/http-error";
-import { SavedTutorModel } from "../models/saved-tutor.model";
 import { UserRepository } from "../repositories/user.repository";
+import { SavedTutorRepository } from "../repositories/saved-tutor.repository";
 
 const userRepository = new UserRepository();
+const savedTutorRepository = new SavedTutorRepository();
 
 export class SavedTutorService {
   async saveTutor(studentId: string, tutorId: string) {
@@ -20,19 +21,13 @@ export class SavedTutorService {
       throw new HttpError(404, "Tutor not found");
     }
 
-    const existing = await SavedTutorModel.findOne({
-      studentId: new mongoose.Types.ObjectId(studentId),
-      tutorId: new mongoose.Types.ObjectId(tutorId),
-    }).exec();
+    const existing = await savedTutorRepository.findOne(studentId, tutorId);
 
     if (existing) {
       return existing;
     }
 
-    return await SavedTutorModel.create({
-      studentId: new mongoose.Types.ObjectId(studentId),
-      tutorId: new mongoose.Types.ObjectId(tutorId),
-    });
+    return await savedTutorRepository.create(studentId, tutorId);
   }
 
   async getSavedTutors(studentId: string) {
@@ -40,10 +35,7 @@ export class SavedTutorService {
       throw new HttpError(400, "Invalid student id");
     }
 
-    return await SavedTutorModel.find({ studentId: new mongoose.Types.ObjectId(studentId) })
-      .populate("tutorId", "fullName username profileImage subject rating pricePerHour")
-      .sort({ createdAt: -1 })
-      .exec();
+    return await savedTutorRepository.getByStudentId(studentId);
   }
 
   async removeSavedTutor(studentId: string, tutorId: string) {
@@ -55,10 +47,7 @@ export class SavedTutorService {
       throw new HttpError(400, "Invalid tutor id");
     }
 
-    const removed = await SavedTutorModel.findOneAndDelete({
-      studentId: new mongoose.Types.ObjectId(studentId),
-      tutorId: new mongoose.Types.ObjectId(tutorId),
-    }).exec();
+    const removed = await savedTutorRepository.remove(studentId, tutorId);
 
     return !!removed;
   }
