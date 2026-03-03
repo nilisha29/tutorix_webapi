@@ -19,7 +19,12 @@ export class AdminUserService {
         const hashedPassword = await bcryptjs.hash(data.password, 10); // 10 - complexity
         data.password = hashedPassword;
 
-        const newUser = await userRepository.createUser(data);
+        const createPayload: any = {
+            ...data,
+            tutorOrigin: data.role === "tutor" ? "admin" : undefined,
+        };
+
+        const newUser = await userRepository.createUser(createPayload);
         return newUser;
     }
 
@@ -42,7 +47,16 @@ export class AdminUserService {
         if(!user){
             throw new HttpError(404, "User not found");
         }
-        const updatedUser = await userRepository.updateUser(id, updateData);
+
+        const nextUpdateData: any = {
+            ...updateData,
+        };
+
+        if (nextUpdateData.role === "tutor" && !nextUpdateData.tutorOrigin) {
+            nextUpdateData.tutorOrigin = "admin";
+        }
+
+        const updatedUser = await userRepository.updateUser(id, nextUpdateData);
         return updatedUser;
     }
 
