@@ -41,17 +41,41 @@ export default function UserBookingsPage() {
         </div>
       )}
 
-      <div className="space-y-3">
-        {bookings.map((booking) => (
-          <div key={booking._id} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <p className="font-semibold text-gray-800">Tutor: {booking.tutorId?.fullName || "Tutor"}</p>
-            <p className="text-sm text-gray-600">Date: {booking.date}</p>
-            <p className="text-sm text-gray-600">Time: {booking.time}</p>
-            <p className="text-sm text-gray-600">Duration: {booking.duration}</p>
-            <p className="text-sm text-gray-600">Payment: {booking.paymentMethod} ({booking.paymentStatus})</p>
-            <p className="text-sm font-semibold text-green-700">Amount: Rs {booking.amount}</p>
-          </div>
-        ))}
+      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        <table className="min-w-full text-sm">
+          <thead className="bg-slate-50 text-left text-slate-600">
+            <tr>
+              <th className="px-4 py-3 font-semibold">Booking ID</th>
+              <th className="px-4 py-3 font-semibold">Tutor</th>
+              <th className="px-4 py-3 font-semibold">Date</th>
+              <th className="px-4 py-3 font-semibold">Time</th>
+              <th className="px-4 py-3 font-semibold">Duration</th>
+              <th className="px-4 py-3 font-semibold">Method</th>
+              <th className="px-4 py-3 font-semibold">Payment</th>
+              <th className="px-4 py-3 font-semibold">Booking</th>
+              <th className="px-4 py-3 font-semibold">Reference</th>
+              <th className="px-4 py-3 font-semibold">Transaction ID</th>
+              <th className="px-4 py-3 font-semibold">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bookings.map((booking) => (
+              <tr key={booking._id} className="border-t border-gray-100 text-slate-700">
+                <td className="px-4 py-3 font-mono text-xs">{booking._id || "-"}</td>
+                <td className="px-4 py-3">{booking.tutorId?.fullName || "Tutor"}</td>
+                <td className="px-4 py-3">{booking.date || "-"}</td>
+                <td className="px-4 py-3">{booking.time || "-"}</td>
+                <td className="px-4 py-3">{booking.duration || "-"}</td>
+                <td className="px-4 py-3 uppercase">{booking.paymentMethod || "-"}</td>
+                <td className="px-4 py-3">{booking.paymentStatus || "-"}</td>
+                <td className="px-4 py-3">{booking.bookingStatus || "-"}</td>
+                <td className="px-4 py-3 font-mono text-xs">{booking.paymentRef || "-"}</td>
+                <td className="px-4 py-3 font-mono text-xs">{booking.gatewayTxnId || "-"}</td>
+                <td className="px-4 py-3 font-semibold text-green-700">Rs {booking.amount ?? "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
