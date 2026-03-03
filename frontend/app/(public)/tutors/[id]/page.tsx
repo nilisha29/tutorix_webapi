@@ -336,9 +336,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getTutorById } from "@/lib/api/auth";
-import { initiateBookingPayment } from "@/lib/api/booking";
 import { sendTutorMessage } from "@/lib/api/message";
 import { getMySavedTutors, removeSavedTutor, saveTutor } from "@/lib/api/saved-tutor";
 import { useAuth } from "@/context/AuthContext";
@@ -375,6 +374,7 @@ const getProfileImageUrl = (profileImage?: string) => {
 
 export default function TutorDetailPage() {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const params = useParams();
   const tutorId = typeof params.id === "string" ? params.id : Array.isArray(params.id) ? params.id[0] : "";
   const [tutor, setTutor] = useState<Tutor | null>(null);
@@ -592,41 +592,17 @@ export default function TutorDetailPage() {
     try {
       setProcessingPayment(true);
       setPaymentStatus("idle");
-      const response = await initiateBookingPayment({
+      const checkoutParams = new URLSearchParams({
         tutorId,
+        tutorName: tutor?.fullName || "Tutor",
         date: selectedDate,
         time: selectedTime,
         duration: selectedDuration,
         paymentMethod,
-        amount: Number(totalPriceLabel),
+        amount: totalPriceLabel,
       });
 
-      const redirectUrl = response?.data?.redirectUrl;
-      const redirectMethod = response?.data?.redirectMethod;
-      const redirectFormFields = response?.data?.redirectFormFields;
-      if (!redirectUrl) {
-        throw new Error("Payment redirect URL not found");
-      }
-
-      if (redirectMethod === "POST" && redirectFormFields) {
-        const form = document.createElement("form");
-        form.method = "POST";
-        form.action = redirectUrl;
-
-        Object.entries(redirectFormFields).forEach(([key, value]) => {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = key;
-          input.value = String(value);
-          form.appendChild(input);
-        });
-
-        document.body.appendChild(form);
-        form.submit();
-        return;
-      }
-
-      window.location.href = redirectUrl;
+      router.push(`/payment/checkout?${checkoutParams.toString()}`);
       return;
     } catch (error: Error | any) {
       const backendMessage = error?.response?.data?.message;
@@ -1031,11 +1007,11 @@ export default function TutorDetailPage() {
                   disabled={processingPayment}
                   className="mt-6 w-full rounded-xl bg-emerald-600 text-white py-3 text-2xl font-semibold hover:bg-emerald-700 transition shadow-md disabled:opacity-60"
                 >
-                  {processingPayment ? "Redirecting..." : "Book & Pay"}
+                  {processingPayment ? "Opening Checkout..." : "Continue to Checkout"}
                 </button>
 
                 <p className="mt-2 text-xs text-slate-500">
-                  You will be redirected to the selected payment gateway and returned after payment.
+                  You will confirm your details on checkout, then proceed to the selected payment gateway.
                 </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">

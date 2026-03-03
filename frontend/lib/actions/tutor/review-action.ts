@@ -16,7 +16,7 @@ export const handleSubmitTutorReview = async (
       return { success: false, message: "Please login first" };
     }
 
-    const response = await fetch(`${baseUrl}${API.TUTORS.GET_BY_ID}/${tutorId}/reviews`, {
+    const response = await fetch(`${baseUrl}${API.TUTORS.BASE}/${tutorId}/reviews`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
