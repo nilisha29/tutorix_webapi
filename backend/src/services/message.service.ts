@@ -6,6 +6,7 @@ import { MessageRepository } from "../repositories/message.repository";
 const userRepository = new UserRepository();
 const messageRepository = new MessageRepository();
 
+
 export class MessageService {
   async sendMessage(studentId: string, tutorId: string, content: string) {
     if (!mongoose.Types.ObjectId.isValid(studentId)) {
@@ -29,6 +30,7 @@ export class MessageService {
     return await messageRepository.createMessage(studentId, tutorId, trimmedContent);
   }
 
+  
   async getTutorMessages(tutorId: string) {
     if (!mongoose.Types.ObjectId.isValid(tutorId)) {
       throw new HttpError(400, "Invalid tutor id");
