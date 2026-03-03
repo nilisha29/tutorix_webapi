@@ -477,6 +477,7 @@ export default function TutorDetailPage() {
       return;
     }
 
+    
     const checkSavedStatus = async () => {
       try {
         const result = await getMySavedTutors();
@@ -1036,7 +1037,6 @@ export default function TutorDetailPage() {
                 <p className="mt-2 text-xs text-slate-500">
                   You will be redirected to the selected payment gateway and returned after payment.
                 </p>
-
 
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <button
