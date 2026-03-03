@@ -19,6 +19,7 @@ export default function EsewaFailurePage() {
     const data = searchParams.get("data");
     const refId = searchParams.get("ref_id");
 
+    
     if (bookingId) targetParams.set("bookingId", bookingId);
     if (paymentRef) targetParams.set("paymentRef", paymentRef);
     if (transactionUuid) targetParams.set("transaction_uuid", transactionUuid);

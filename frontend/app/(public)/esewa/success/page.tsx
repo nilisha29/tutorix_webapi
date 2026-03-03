@@ -10,6 +10,7 @@ export default function EsewaSuccessPage() {
   useEffect(() => {
     const targetParams = new URLSearchParams();
 
+    
     targetParams.set("provider", "esewa");
     targetParams.set("status", "success");
 
