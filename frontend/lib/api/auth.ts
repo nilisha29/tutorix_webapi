@@ -94,7 +94,7 @@ export const whoAmI = async () => {
 export const updateProfile = async (profileData: any) => {
   try {
     const response = await axios.put(
-      API.AUTH.UPDATEPROFILE,
+      API.AUTH.UPDATE_PROFILE,
       profileData,
       {
         headers: {
@@ -111,7 +111,7 @@ export const updateProfile = async (profileData: any) => {
 
 export const getTutors = async () => {
   try {
-    const response = await axios.get(API.AUTH.TUTORS);
+    const response = await axios.get(API.AUTH.TUTOR.LIST);
     return response.data;
   } catch (error: Error | any) {
     throw new Error(error.response?.data?.message
@@ -121,7 +121,7 @@ export const getTutors = async () => {
 
 export const getTutorById = async (tutorId: string) => {
   try {
-    const response = await axios.get(`${API.TUTORS.GET_BY_ID}/${tutorId}`);
+    const response = await axios.get(`${API.TUTORS.BASE}/${tutorId}`);
     return response.data;
   } catch (error: Error | any) {
     throw new Error(error.response?.data?.message

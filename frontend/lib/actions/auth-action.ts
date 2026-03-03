@@ -7,7 +7,7 @@
 import { LoginData, RegisterData } from "@/app/(auth)/schema"
 import { redirect } from "next/navigation";
 import { registerUser, loginUser, whoAmI, updateProfile } from '@/lib/api/auth';
-import { clearAuthCookies, setAuthToken, setUserData } from '@/lib/cookie';
+import { clearAuthCookies, getAuthToken, getUserData, setAuthToken, setUserData } from '@/lib/cookie';
 import { revalidatePath } from 'next/cache';
 
 export const handleRegister = async (formData: any) => {
@@ -46,7 +46,8 @@ export const handleLogin = async (formData: any) => {
             return {
                 success: true, 
                 message: "Login successful", // change
-                data: result.data
+                data: result.data,
+                token: result.token
             };
         }
         return {
@@ -69,6 +70,17 @@ export const handleLogin = async (formData: any) => {
 
 export async function handleWhoAmI() {
     try {
+        const token = await getAuthToken();
+        const cachedUser = await getUserData();
+
+        if (token && cachedUser) {
+            return {
+                success: true,
+                message: 'User data fetched successfully',
+                data: cachedUser
+            };
+        }
+
         const result = await whoAmI();
         if (result.success) {
             return {
