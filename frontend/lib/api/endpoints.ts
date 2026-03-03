@@ -45,6 +45,7 @@ export const API = {
         ADMIN_LIST: "/api/bookings/admin",
     },
 
+    
     MESSAGES: {
         BASE: "/api/messages",
         SEND: "/api/messages",
