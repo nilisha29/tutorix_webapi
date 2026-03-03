@@ -39,8 +39,6 @@ export default function TutorMessagesPage() {
             <p className="text-gray-500 text-lg">💬 No messages yet</p>
           </div>
         )}
-
-
     
         {!loading && !error && messages.length > 0 && (
           <div className="overflow-x-auto">

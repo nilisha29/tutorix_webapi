@@ -1037,6 +1037,7 @@ export default function TutorDetailPage() {
                   You will be redirected to the selected payment gateway and returned after payment.
                 </p>
 
+
                 <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                   <button
                     type="button"
