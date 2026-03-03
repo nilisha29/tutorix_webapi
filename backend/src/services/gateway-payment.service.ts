@@ -3,6 +3,8 @@ import {
   ESEWA_INITIATE_URL,
   ESEWA_PRODUCT_CODE,
   ESEWA_SECRET_KEY,
+  ESEWA_FAILURE_URL,
+  ESEWA_SUCCESS_URL,
   ESEWA_STATUS_URL,
   FRONTEND_BASE_URL,
   KHALTI_INITIATE_URL,
@@ -14,6 +16,10 @@ import { HttpError } from "../errors/http-error";
 type RedirectMethod = "GET" | "POST";
 
 export class GatewayPaymentService {
+  private async delay(ms: number) {
+    await new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   private ensureGatewaySecret(key: string, gateway: "khalti" | "esewa") {
     const normalized = String(key || "").trim();
     const isPlaceholder =
@@ -54,6 +60,14 @@ export class GatewayPaymentService {
     }
 
     return `${FRONTEND_BASE_URL}/payment/result?${query.toString()}`;
+  }
+
+  private buildEsewaCallbackUrl(baseUrl: string, params: { bookingId: string; paymentRef: string }) {
+    const url = new URL(baseUrl);
+    url.searchParams.set("bookingId", params.bookingId);
+    url.searchParams.set("provider", "esewa");
+    url.searchParams.set("paymentRef", params.paymentRef);
+    return url.toString();
   }
 
   async initiateKhaltiPayment(payload: {
@@ -147,7 +161,7 @@ export class GatewayPaymentService {
       throw new HttpError(400, `Failed to verify Khalti payment: ${detail}`);
     }
 
-    const normalized = String(responseBody?.status || "").toLowerCase();
+    const normalized = String(responseBody?.status || "").trim().toLowerCase();
     const isPaid = ["completed", "success", "paid"].includes(normalized);
 
     return {
@@ -182,18 +196,14 @@ export class GatewayPaymentService {
     const transactionUuid = payload.paymentRef;
     const { signedFieldNames, signature } = this.createEsewaSignature(totalAmount, transactionUuid);
 
-    const successUrl = this.buildResultUrl({
+    const successUrl = this.buildEsewaCallbackUrl(ESEWA_SUCCESS_URL, {
       bookingId: payload.bookingId,
-      provider: "esewa",
       paymentRef: payload.paymentRef,
-      status: "success",
     });
 
-    const failureUrl = this.buildResultUrl({
+    const failureUrl = this.buildEsewaCallbackUrl(ESEWA_FAILURE_URL, {
       bookingId: payload.bookingId,
-      provider: "esewa",
       paymentRef: payload.paymentRef,
-      status: "failed",
     });
 
     const redirectFormFields: Record<string, string> = {
@@ -225,33 +235,80 @@ export class GatewayPaymentService {
   }
 
   async verifyEsewaPayment(payload: { transactionUuid: string; totalAmount: number }) {
-    const statusUrl = new URL(ESEWA_STATUS_URL);
-    statusUrl.searchParams.set("product_code", ESEWA_PRODUCT_CODE);
-    statusUrl.searchParams.set("total_amount", payload.totalAmount.toFixed(2));
-    statusUrl.searchParams.set("transaction_uuid", payload.transactionUuid);
+    const maxAttempts = 4;
+    let lastResponseBody: Record<string, any> | undefined;
 
-    const response = await fetch(statusUrl.toString(), {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-      },
-    });
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const statusUrl = new URL(ESEWA_STATUS_URL);
+      statusUrl.searchParams.set("product_code", ESEWA_PRODUCT_CODE);
+      statusUrl.searchParams.set("total_amount", payload.totalAmount.toFixed(2));
+      statusUrl.searchParams.set("transaction_uuid", payload.transactionUuid);
 
-    const responseBody = await this.parseGatewayResponse(response);
+      const response = await fetch(statusUrl.toString(), {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-    if (!response.ok) {
-      throw new HttpError(400, "Failed to verify eSewa payment");
+      const responseBody = await this.parseGatewayResponse(response);
+      lastResponseBody = responseBody;
+
+      if (!response.ok) {
+        if (attempt < maxAttempts) {
+          await this.delay(1200);
+          continue;
+        }
+        return {
+          isPaid: false,
+          isPending: true,
+          gatewayTxnId: payload.transactionUuid,
+          rawVerifyResponse: {
+            ...(responseBody || {}),
+            status: "pending",
+            note: "esewa_verify_non_ok_response",
+          },
+        };
+      }
+
+      const normalized = String(responseBody?.status || "").trim().toLowerCase();
+      const isPaid = ["complete", "completed", "success", "paid"].includes(normalized);
+      const isPending = ["pending", "processing", "initiated", "incomplete"].includes(normalized);
+
+      if (isPaid) {
+        return {
+          isPaid: true,
+          isPending: false,
+          gatewayTxnId: String(
+            responseBody?.ref_id || responseBody?.transaction_code || responseBody?.transaction_uuid || payload.transactionUuid
+          ),
+          rawVerifyResponse: responseBody,
+        };
+      }
+
+      if (isPending && attempt < maxAttempts) {
+        await this.delay(1200);
+        continue;
+      }
+
+      return {
+        isPaid: false,
+        isPending,
+        gatewayTxnId: String(
+          responseBody?.ref_id || responseBody?.transaction_code || responseBody?.transaction_uuid || payload.transactionUuid
+        ),
+        rawVerifyResponse: responseBody,
+      };
     }
 
-    const normalized = String(responseBody?.status || "").toLowerCase();
-    const isPaid = ["complete", "completed", "success", "paid"].includes(normalized);
-
     return {
-      isPaid,
-      gatewayTxnId: String(
-        responseBody?.ref_id || responseBody?.transaction_code || responseBody?.transaction_uuid || payload.transactionUuid
-      ),
-      rawVerifyResponse: responseBody,
+      isPaid: false,
+      isPending: true,
+      gatewayTxnId: payload.transactionUuid,
+      rawVerifyResponse: {
+        ...(lastResponseBody || {}),
+        status: "pending",
+      },
     };
   }
 }
