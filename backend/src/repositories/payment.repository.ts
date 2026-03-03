@@ -67,6 +67,15 @@ export class PaymentRepository {
       .exec();
   }
 
+  async getPaymentByPaymentRefAndStudent(paymentRef: string, studentId: string) {
+    return await PaymentModel.findOne({
+      paymentRef,
+      studentId: new mongoose.Types.ObjectId(studentId),
+    })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
   async updatePaymentRecord(
     paymentId: string,
     payload: {
