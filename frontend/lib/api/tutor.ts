@@ -6,6 +6,7 @@ export const getTutorList = async () => {
   return response.data;
 };
 
+
 export const getTutorDetail = async (tutorId: string) => {
   const response = await axios.get(`${API.TUTORS.BASE}/${tutorId}`);
   return response.data;
