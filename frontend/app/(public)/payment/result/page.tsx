@@ -8,10 +8,11 @@ import { verifyBookingPayment } from "@/lib/api/booking";
 export default function PaymentResultPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "failed">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "pending" | "success" | "failed" | "cancelled">("idle");
   const [message, setMessage] = useState("Processing payment result...");
+  const [resolvedTxnId, setResolvedTxnId] = useState<string | undefined>(undefined);
 
-  const bookingId = searchParams.get("bookingId") || "";
+  const bookingId = searchParams.get("bookingId") || undefined;
   const provider = (searchParams.get("provider") || "").toLowerCase();
   const paymentRef = searchParams.get("paymentRef") || undefined;
   const rawStatus = (searchParams.get("status") || "").toLowerCase();
@@ -43,43 +44,101 @@ export default function PaymentResultPage() {
     if (["success", "paid", "complete", "completed"].includes(rawStatus)) {
       return "success";
     }
-    if (["failed", "failure", "cancel", "cancelled"].includes(rawStatus)) {
+    if (["cancel", "cancelled", "canceled", "abort", "aborted"].includes(rawStatus)) {
+      return "cancelled";
+    }
+    if (["failed", "failure", "error"].includes(rawStatus)) {
       return "failed";
     }
-    return "failed";
+    return "unknown";
   }, [rawStatus]);
 
   useEffect(() => {
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     const runVerification = async () => {
-      if (!bookingId) {
+      if (!bookingId && !paymentRef && !transactionUuid) {
         setStatus("failed");
-        setMessage("Booking not found for payment verification.");
+        setMessage("Payment reference is missing for verification.");
         return;
       }
 
       try {
-        setStatus("loading");
-        await verifyBookingPayment({
-          bookingId,
-          provider: provider === "khalti" || provider === "esewa" ? provider : undefined,
-          paymentRef,
-          status: normalizedStatus,
-          pidx,
-          transactionUuid,
-          gatewayTxnId,
-        });
+        const maxAttempts = 4;
 
-        if (normalizedStatus === "success") {
-          setStatus("success");
-          setMessage("Payment successful. Your booking is confirmed.");
-          return;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          setStatus("loading");
+
+          const verifyResponse = await verifyBookingPayment({
+            bookingId,
+            provider: provider === "khalti" || provider === "esewa" ? provider : undefined,
+            paymentRef,
+            status: normalizedStatus === "unknown" ? undefined : normalizedStatus,
+            pidx,
+            transactionUuid,
+            gatewayTxnId,
+          });
+
+          const verified = Boolean(verifyResponse?.data?.verified);
+          const paymentStatus = String(verifyResponse?.data?.payment?.status || "").toLowerCase();
+          const paymentGatewayTxnId =
+            verifyResponse?.data?.payment?.gatewayTxnId ||
+            verifyResponse?.data?.booking?.gatewayTxnId ||
+            undefined;
+
+          if (paymentGatewayTxnId) {
+            setResolvedTxnId(String(paymentGatewayTxnId));
+          }
+
+          if (verified || paymentStatus === "paid") {
+            setStatus("success");
+            setMessage("Payment successful. Your booking is confirmed.");
+            return;
+          }
+
+          if (paymentStatus === "pending") {
+            setStatus("pending");
+            setMessage("Payment is being processed. Please wait...");
+
+            if (attempt < maxAttempts) {
+              await delay(1500);
+              continue;
+            }
+
+            setMessage("Payment is still processing. Please check My Bookings in a moment.");
+            return;
+          }
+
+          if (normalizedStatus === "cancelled") {
+            setStatus("cancelled");
+            setMessage("Payment was cancelled.");
+            return;
+          }
+
+          if (paymentStatus === "failed" && normalizedStatus === "success" && attempt < maxAttempts) {
+            setStatus("pending");
+            setMessage("Payment confirmation is still syncing. Retrying verification...");
+            await delay(1500);
+            continue;
+          }
+
+          if (normalizedStatus === "failed" || paymentStatus === "failed") {
+            setStatus("failed");
+            setMessage("Payment failed or was cancelled.");
+            return;
+          }
+
+          if (attempt < maxAttempts) {
+            await delay(1200);
+          }
         }
 
         setStatus("failed");
-        setMessage("Payment failed or was cancelled.");
+        setMessage("Payment verification could not be completed. Please check My Bookings.");
       } catch (error: Error | any) {
         setStatus("failed");
-        setMessage(error.message || "Payment verification failed.");
+        const backendMessage = error?.response?.data?.message;
+        setMessage(backendMessage || error.message || "Payment verification failed.");
       }
     };
 
@@ -92,8 +151,22 @@ export default function PaymentResultPage() {
         <h1 className="text-2xl font-bold text-slate-900">Payment Result</h1>
         <p className="mt-3 text-sm text-slate-600">{message}</p>
 
+        <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-xs text-slate-700">
+          <p><span className="font-semibold">Booking ID:</span> {bookingId || "-"}</p>
+          <p><span className="font-semibold">Reference:</span> {paymentRef || transactionUuid || "-"}</p>
+          <p><span className="font-semibold">Transaction ID:</span> {resolvedTxnId || gatewayTxnId || "-"}</p>
+        </div>
+
         {status === "loading" && (
           <p className="mt-6 text-sm text-blue-600">Verifying payment...</p>
+        )}
+
+        {status === "pending" && (
+          <p className="mt-6 text-sm text-amber-600">Payment is processing...</p>
+        )}
+
+        {status === "cancelled" && (
+          <p className="mt-6 text-sm text-orange-600">Payment was cancelled.</p>
         )}
 
         <div className="mt-8 flex items-center justify-center gap-3">

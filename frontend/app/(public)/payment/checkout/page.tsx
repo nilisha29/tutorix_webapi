@@ -2,15 +2,25 @@
 
 import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { initiateBookingPayment } from "@/lib/api/booking";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "react-toastify";
 
-export default function MockPaymentCheckoutPage() {
+export default function PaymentCheckoutPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const [processing, setProcessing] = useState(false);
+  const [fullName, setFullName] = useState(String(user?.fullName || ""));
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [address, setAddress] = useState("");
 
-  const bookingId = searchParams.get("bookingId") || "";
-  const ref = searchParams.get("ref") || "";
-  const method = (searchParams.get("method") || "esewa").toLowerCase() === "khalti" ? "khalti" : "esewa";
+  const tutorId = searchParams.get("tutorId") || "";
+  const tutorName = searchParams.get("tutorName") || "Tutor";
+  const date = searchParams.get("date") || "";
+  const time = searchParams.get("time") || "";
+  const duration = searchParams.get("duration") || "60 min";
+  const method = (searchParams.get("paymentMethod") || "esewa").toLowerCase() === "khalti" ? "khalti" : "esewa";
   const amount = Number(searchParams.get("amount") || 0);
 
   const amountLabel = useMemo(() => {
@@ -18,24 +28,75 @@ export default function MockPaymentCheckoutPage() {
     return amount.toFixed(2);
   }, [amount]);
 
-  const handleComplete = () => {
-    if (!bookingId || !ref) {
-      router.push("/payment/result?status=failed");
+  const handleComplete = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login first to continue payment");
+      router.push("/login");
+      return;
+    }
+
+    if (!tutorId || !date || !time || !duration || !Number.isFinite(amount) || amount <= 0) {
+      toast.error("Missing booking details. Please go back and try again.");
+      return;
+    }
+
+    if (!fullName.trim() || !phoneNumber.trim() || !address.trim()) {
+      toast.error("Please fill full name, phone number, and address.");
       return;
     }
 
     setProcessing(true);
-    const mockTxnId = `MOCK-${Date.now()}`;
-    router.push(`/payment/result?bookingId=${encodeURIComponent(bookingId)}&ref=${encodeURIComponent(ref)}&method=${method}&status=success&txnId=${encodeURIComponent(mockTxnId)}`);
+    try {
+      const response = await initiateBookingPayment({
+        tutorId,
+        date,
+        time,
+        duration,
+        paymentMethod: method,
+        amount,
+      });
+
+      const redirectUrl = response?.data?.redirectUrl;
+      const redirectMethod = response?.data?.redirectMethod;
+      const redirectFormFields = response?.data?.redirectFormFields;
+
+      if (!redirectUrl) {
+        throw new Error("Payment redirect URL not found");
+      }
+
+      if (redirectMethod === "POST" && redirectFormFields) {
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = redirectUrl;
+
+        Object.entries(redirectFormFields).forEach(([key, value]) => {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
+        return;
+      }
+
+      window.location.href = redirectUrl;
+    } catch (error: Error | any) {
+      const backendMessage = error?.response?.data?.message;
+      toast.error(backendMessage || error.message || "Failed to initiate payment");
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleCancel = () => {
-    if (!bookingId || !ref) {
-      router.push("/payment/result?status=failed");
-      return;
-    }
-
-    router.push(`/payment/result?bookingId=${encodeURIComponent(bookingId)}&ref=${encodeURIComponent(ref)}&method=${method}&status=failed`);
+    const cancelParams = new URLSearchParams({
+      provider: method,
+      status: "cancelled",
+    });
+    router.push(`/payment/result?${cancelParams.toString()}`);
   };
 
   const themeClass = method === "esewa"
@@ -50,16 +111,20 @@ export default function MockPaymentCheckoutPage() {
     <div className="min-h-[70vh] px-4 py-10 flex items-center justify-center">
       <div className={`w-full max-w-md rounded-2xl border p-6 shadow-sm ${themeClass}`}>
         <h1 className="text-2xl font-bold text-slate-900">{method === "esewa" ? "eSewa Checkout" : "Khalti Checkout"}</h1>
-        <p className="mt-2 text-sm text-slate-600">Demo payment interface for booking.</p>
+        <p className="mt-2 text-sm text-slate-600">Confirm your booking details before gateway payment.</p>
 
         <div className="mt-5 rounded-xl bg-white p-4 border border-slate-200">
           <div className="flex items-center justify-between text-sm text-slate-700">
-            <span>Booking ID</span>
-            <span className="font-semibold">{bookingId || "-"}</span>
+            <span>Tutor</span>
+            <span className="font-semibold">{tutorName || "-"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-slate-700">
-            <span>Reference</span>
-            <span className="font-semibold">{ref || "-"}</span>
+            <span>Date & Time</span>
+            <span className="font-semibold">{date && time ? `${date} ${time}` : "-"}</span>
+          </div>
+          <div className="mt-2 flex items-center justify-between text-sm text-slate-700">
+            <span>Duration</span>
+            <span className="font-semibold">{duration || "-"}</span>
           </div>
           <div className="mt-2 flex items-center justify-between text-sm text-slate-700">
             <span>Amount</span>
@@ -68,10 +133,30 @@ export default function MockPaymentCheckoutPage() {
         </div>
 
         <div className="mt-5 space-y-3">
-          <input type="text" placeholder="Full Name" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none" />
-          <input type="text" placeholder="Mobile Number" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none" />
-          <input type="text" placeholder={method === "esewa" ? "eSewa ID" : "Khalti ID"} className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none" />
-          <input type="password" placeholder="MPIN" className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none" />
+          <input
+            type="text"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            placeholder="Full Name"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+          />
+          <input
+            type="text"
+            value={phoneNumber}
+            onChange={(event) => setPhoneNumber(event.target.value)}
+            placeholder="Mobile Number"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+          />
+          <input
+            type="text"
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+            placeholder="Address"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"
+          />
+          <p className="text-xs text-slate-500">
+            You selected: <span className="font-semibold">{method === "esewa" ? "eSewa" : "Khalti"}</span>
+          </p>
         </div>
 
         <button
@@ -80,7 +165,7 @@ export default function MockPaymentCheckoutPage() {
           disabled={processing}
           className={`mt-6 w-full rounded-lg py-2.5 text-sm font-semibold text-white disabled:opacity-70 ${buttonClass}`}
         >
-          {processing ? "Processing..." : "Pay Now"}
+          {processing ? "Redirecting..." : `Pay via ${method === "esewa" ? "eSewa" : "Khalti"}`}
         </button>
 
         <button
