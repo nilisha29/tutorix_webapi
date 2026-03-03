@@ -1,128 +1,140 @@
-// backend route paths
-
 export const API = {
-    AUTH: {
-        REGISTER: "/api/auth/register",
-        LOGIN: "/api/auth/login",
-        FORGOT_PASSWORD: "/api/auth/forgot-password",
-        RESET_PASSWORD: "/api/auth/reset-password",
-        CHANGE_PASSWORD: "/api/auth/change-password",
-        WHOAMI: "/api/auth/whoami",
-        UPDATE_PROFILE: "/api/auth/update-profile",
-        BECOME_TUTOR: "/api/auth/become-tutor",
-        CREATE_USER_BY_ADMIN: "/api/auth/user",
-        UPDATE_BY_ID: "/api/auth/:id",
-        TUTORS: "/api/auth/tutors",
+  // ---------------- AUTH ----------------
+  AUTH: {
+    BASE: "/api/auth",
+    REGISTER: "/api/auth/register",
+    LOGIN: "/api/auth/login",
+    FORGOT_PASSWORD: "/api/auth/forgot-password",
+    RESET_PASSWORD: "/api/auth/reset-password",
+    CHANGE_PASSWORD: "/api/auth/change-password",
+    WHOAMI: "/api/auth/whoami",
+    UPDATE_PROFILE: "/api/auth/update-profile",
 
-        // backward compatibility
-        UPDATEPROFILE: "/api/auth/update-profile",
+    // User operations
+    CREATE_USER: "/api/auth/user",
+    UPDATE_BY_ID: (id: string) => `/api/auth/${id}`,
+
+    // Tutor operations
+    TUTOR: {
+      BECOME: "/api/auth/become-tutor",
+      LIST: "/api/auth/tutors",
     },
 
-    TUTORS: {
-        BASE: "/api/tutors",
-        GET_ALL: "/api/auth/tutors",
-        LIST: "/api/auth/tutors",
-        GET_BY_ID: "/api/tutors",
-        GET_BY_ID_PATH: "/api/tutors/:id",
-        DETAIL: "/api/tutors/:id",
-        CREATE_REVIEW: "/api/tutors/:id/reviews",
-        REVIEWS: "/api/tutors/:id/reviews",
+    // Admin operations
+    ADMIN_USER: {
+      CREATE: "/api/auth/user",
+    },
+
+    // Nested for clarity
+    PASSWORD: {
+      FORGOT: "/api/auth/forgot-password",
+      RESET: "/api/auth/reset-password",
+      CHANGE: "/api/auth/change-password",
+    },
+    PROFILE: {
+      WHOAMI: "/api/auth/whoami",
+      UPDATE: "/api/auth/update-profile",
+    },
+  },
+
+  // ---------------- TUTORS ----------------
+  TUTORS: {
+    BASE: "/api/tutors",
+    BY_ID: (id: string) => `/api/tutors/${id}`,
+    REVIEWS: (id: string) => `/api/tutors/${id}/reviews`,
+    ADD_REVIEW: (id: string) => `/api/tutors/${id}/reviews`,
+    DETAIL: (id: string) => `/api/tutors/${id}`,
+  },
+
+  // ---------------- BOOKINGS ----------------
+  BOOKINGS: {
+    BASE: "/api/bookings",
+    CREATE: "/api/bookings",
+    BY_ID: (id: string) => `/api/bookings/${id}`,
+    UPDATE: (id: string) => `/api/bookings/${id}`,
+    DELETE: (id: string) => `/api/bookings/${id}`,
+    MY_STUDENT: "/api/bookings/my-student",
+    MY_TUTOR: "/api/bookings/my-tutor",
+
+    // Admin bookings
+    ADMIN: {
+      BASE: "/api/bookings/admin",
+      LIST: "/api/bookings/admin",
+    },
+
+    // Payments
+    PAYMENTS: {
+      INITIATE: "/api/bookings/payments/initiate",
+      VERIFY: "/api/bookings/payments/verify",
+    },
+  },
+
+  // ---------------- PAYMENTS ----------------
+  PAYMENTS: {
+    BASE: "/api/bookings/payments",
+    INITIATE: "/api/bookings/payments/initiate",
+    VERIFY: "/api/bookings/payments/verify",
+  },
+
+  // ---------------- MESSAGES ----------------
+  MESSAGES: {
+    BASE: "/api/messages",
+    SEND: "/api/messages",
+    TUTOR_INBOX: "/api/messages/tutor",
+    BY_ID: (messageId: string) => `/api/messages/${messageId}`,
+    DELETE: (messageId: string) => `/api/messages/${messageId}`,
+  },
+
+  // ---------------- SAVED TUTORS ----------------
+  SAVED_TUTORS: {
+    BASE: "/api/saved-tutors",
+    SAVE: "/api/saved-tutors",
+    MY: "/api/saved-tutors/my",
+    BY_TUTOR_ID: (tutorId: string) => `/api/saved-tutors/${tutorId}`,
+    REMOVE: (tutorId: string) => `/api/saved-tutors/${tutorId}`,
+  },
+
+  // ---------------- ADMIN ----------------
+  ADMIN: {
+    USER: {
+      BASE: "/api/admin/users",
+      CREATE: "/api/admin/users",
+      LIST: "/api/admin/users",
+      BY_ID: (id: string) => `/api/admin/users/${id}`,
+      UPDATE: (id: string) => `/api/admin/users/${id}`,
+      DELETE: (id: string) => `/api/admin/users/${id}`,
+      REVIEWS: (id: string) => `/api/admin/users/${id}/reviews`,
+      REVIEW_BY_REVIEWER: (id: string, reviewerId: string) =>
+        `/api/admin/users/${id}/reviews/${reviewerId}`,
     },
 
     BOOKINGS: {
-        BASE: "/api/bookings",
-        CREATE: "/api/bookings",
-        LIST: "/api/bookings",
-        GET_BY_ID: "/api/bookings/:id",
-        UPDATE: "/api/bookings/:id",
-        DELETE: "/api/bookings/:id",
-        INITIATE_PAYMENT: "/api/bookings/payments/initiate",
-        VERIFY_PAYMENT: "/api/bookings/payments/verify",
-        PAYMENTS_BASE: "/api/bookings/payments",
-        MY_STUDENT: "/api/bookings/my-student",
-        MY_TUTOR: "/api/bookings/my-tutor",
-        ADMIN_ALL: "/api/bookings/admin",
-        ADMIN_LIST: "/api/bookings/admin",
+      BASE: "/api/bookings/admin",
+      LIST: "/api/bookings/admin",
     },
 
-    
-    MESSAGES: {
-        BASE: "/api/messages",
-        SEND: "/api/messages",
-        CREATE: "/api/messages",
-        LIST: "/api/messages",
-        TUTOR_INBOX: "/api/messages/tutor",
-        DELETE: "/api/messages",
-        DELETE_BY_ID: "/api/messages/:messageId",
+    PAYMENTS: {
+      BASE: "/api/bookings/admin",
+      LIST: "/api/bookings/admin",
     },
 
-    SAVED_TUTORS: {
-        BASE: "/api/saved-tutors",
-        SAVE: "/api/saved-tutors",
-        CREATE: "/api/saved-tutors",
-        LIST: "/api/saved-tutors/my",
-        MY_LIST: "/api/saved-tutors/my",
-        REMOVE: "/api/saved-tutors",
-        DELETE: "/api/saved-tutors/:tutorId",
-    },
-
-    ADMIN: {
-        USER: {
-            BASE: "/api/admin/users",
-            CREATE: "/api/admin/users",
-            GET_ALL: "/api/admin/users",
-            GET_BY_ID: "/api/admin/users/",
-            GET_BY_ID_PATH: "/api/admin/users/:id",
-            UPDATE: "/api/admin/users/",
-            UPDATE_PATH: "/api/admin/users/:id",
-            DELETE: "/api/admin/users/",
-            DELETE_PATH: "/api/admin/users/:id",
-            UPDATE_REVIEW: "/api/admin/users/:id/reviews/:reviewerId",
-            DELETE_REVIEW: "/api/admin/users/:id/reviews/:reviewerId",
-        },
-
-        TUTOR: {
-            BASE: "/api/admin/users",
-            LIST: "/api/admin/users",
-            CREATE: "/api/admin/users",
-            GET_BY_ID: "/api/admin/users/:id",
-            UPDATE: "/api/admin/users/:id",
-            DELETE: "/api/admin/users/:id",
-            UPDATE_REVIEW: "/api/admin/users/:id/reviews/:reviewerId",
-            DELETE_REVIEW: "/api/admin/users/:id/reviews/:reviewerId",
-        },
-
-        BOOKINGS: {
-            BASE: "/api/bookings/admin",
-            LIST: "/api/bookings/admin",
-            GET_BY_ID: "/api/bookings/:id",
-            UPDATE: "/api/bookings/:id",
-            DELETE: "/api/bookings/:id",
-        },
-
-        PAYMENTS: {
-            BASE: "/api/bookings/admin",
-            LIST: "/api/bookings/admin",
-            DETAIL: "/api/bookings/:id",
-            UPDATE_STATUS: "/api/bookings/:id",
-        },
-
-        REVIEWS: {
-            BASE: "/api/admin/users/:id/reviews",
-            LIST: "/api/admin/users",
-            UPDATE: "/api/admin/users/:id/reviews/:reviewerId",
-            DELETE: "/api/admin/users/:id/reviews/:reviewerId",
-        },
-
-        PROFILE: {
-            VIEW: "/api/auth/whoami",
-            UPDATE: "/api/auth/update-profile",
-        },
+    REVIEWS: {
+      BASE: "/api/admin/users",
+      LIST: "/api/admin/users",
+      REVIEW_BY_REVIEWER: (id: string, reviewerId: string) =>
+        `/api/admin/users/${id}/reviews/${reviewerId}`,
     },
 
     PROFILE: {
-        USER_VIEW: "/api/auth/whoami",
-        USER_EDIT: "/api/auth/update-profile",
-        TUTOR_EDIT: "/api/auth/become-tutor",
+      VIEW: "/api/auth/whoami",
+      UPDATE: "/api/auth/update-profile",
     },
+  },
+
+  // ---------------- PROFILE ----------------
+  PROFILE: {
+    USER_VIEW: "/api/auth/whoami",
+    USER_EDIT: "/api/auth/update-profile",
+    TUTOR_EDIT: "/api/auth/become-tutor",
+  },
 };
