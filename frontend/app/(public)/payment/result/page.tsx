@@ -12,11 +12,31 @@ export default function PaymentResultPage() {
   const [message, setMessage] = useState("Processing payment result...");
 
   const bookingId = searchParams.get("bookingId") || "";
+  const provider = (searchParams.get("provider") || "").toLowerCase();
+  const paymentRef = searchParams.get("paymentRef") || undefined;
   const rawStatus = (searchParams.get("status") || "").toLowerCase();
+  const pidx = searchParams.get("pidx") || undefined;
   const gatewayTxnId =
     searchParams.get("transaction_id") ||
     searchParams.get("pidx") ||
+    searchParams.get("ref_id") ||
     searchParams.get("txnId") ||
+    undefined;
+
+  const decodeEsewaData = (encodedData: string) => {
+    try {
+      const decoded = atob(encodedData);
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  };
+
+  const esewaData = searchParams.get("data") ? decodeEsewaData(searchParams.get("data") as string) : null;
+  const transactionUuid =
+    searchParams.get("transaction_uuid") ||
+    esewaData?.transaction_uuid ||
+    paymentRef ||
     undefined;
 
   const normalizedStatus = useMemo(() => {
@@ -41,7 +61,11 @@ export default function PaymentResultPage() {
         setStatus("loading");
         await verifyBookingPayment({
           bookingId,
+          provider: provider === "khalti" || provider === "esewa" ? provider : undefined,
+          paymentRef,
           status: normalizedStatus,
+          pidx,
+          transactionUuid,
           gatewayTxnId,
         });
 
@@ -60,7 +84,7 @@ export default function PaymentResultPage() {
     };
 
     runVerification();
-  }, [bookingId, gatewayTxnId, normalizedStatus]);
+  }, [bookingId, gatewayTxnId, normalizedStatus, pidx, provider, paymentRef, transactionUuid]);
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-6 py-16">

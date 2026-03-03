@@ -27,7 +27,7 @@ export default function UserManagementPage() {
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterType, setFilterType] = useState<"all" | "admin" | "user">("all");
+  const [filterType, setFilterType] = useState<"all" | "admin" | "user" | "tutor">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const router = useRouter();
   
@@ -88,6 +88,7 @@ export default function UserManagementPage() {
     total: users.length,
     admins: users.filter((u) => u.role === "admin").length,
     regularUsers: users.filter((u) => u.role === "user").length,
+    tutors: users.filter((u) => u.role === "tutor").length,
   };
 
   const handleDelete = async (id: string, fullName: string) => {
@@ -169,7 +170,7 @@ export default function UserManagementPage() {
       </div>
 
       {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Users</p>
           <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total.toLocaleString()}</p>
@@ -183,6 +184,11 @@ export default function UserManagementPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Regular Users</p>
           <p className="text-2xl font-bold text-blue-600 mt-1">{stats.regularUsers.toLocaleString()}</p>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Tutor Users</p>
+          <p className="text-2xl font-bold text-amber-600 mt-1">{stats.tutors.toLocaleString()}</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
@@ -249,6 +255,16 @@ export default function UserManagementPage() {
             }`}
           >
             Users Only
+          </button>
+          <button
+            onClick={() => setFilterType("tutor")}
+            className={`px-3 py-2 font-medium text-xs border-b-2 transition ${
+              filterType === "tutor"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            Tutors Only
           </button>
         </div>
       </div>

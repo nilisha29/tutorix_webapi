@@ -29,7 +29,11 @@ export const initiateBookingPayment = async (payload: {
 
 export const verifyBookingPayment = async (payload: {
   bookingId: string;
-  status: string;
+  provider?: "esewa" | "khalti";
+  paymentRef?: string;
+  status?: string;
+  pidx?: string;
+  transactionUuid?: string;
   gatewayTxnId?: string;
 }) => {
   const response = await axios.post(API.BOOKINGS.VERIFY_PAYMENT, payload);

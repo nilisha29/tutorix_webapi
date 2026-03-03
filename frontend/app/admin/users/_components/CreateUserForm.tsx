@@ -11,7 +11,10 @@ export default function CreateUserForm() {
     
     const [pending, startTransition] = useTransition();
     const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<UserData>({
-        resolver: zodResolver(UserSchema) as any
+        resolver: zodResolver(UserSchema) as any,
+        defaultValues: {
+            role: "user",
+        },
     });
     const [error, setError] = useState<string | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -48,6 +51,7 @@ export default function CreateUserForm() {
                 formData.append('username', data.username);
                 formData.append('password', data.password);
                 formData.append('confirmPassword', data.confirmPassword);
+                formData.append('role', data.role || 'user');
                 
                 if (data.phoneNumber) {
                     formData.append('phoneNumber', data.phoneNumber);
@@ -197,6 +201,22 @@ export default function CreateUserForm() {
                 />
                 {errors.address?.message && (
                     <p className="text-xs text-red-600">{errors.address.message}</p>
+                )}
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="role">Role</label>
+                <select
+                    id="role"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("role")}
+                >
+                    <option value="user">User</option>
+                    <option value="tutor">Tutor</option>
+                    <option value="admin">Admin</option>
+                </select>
+                {errors.role?.message && (
+                    <p className="text-xs text-red-600">{errors.role.message}</p>
                 )}
             </div>
 

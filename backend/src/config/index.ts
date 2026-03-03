@@ -15,3 +15,5 @@ export const MONGODB_URI: string =
 export const JWT_SECRET: string =
   process.env.JWT_SECRET || "default_secret";
 
+
+

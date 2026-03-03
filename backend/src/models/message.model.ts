@@ -9,6 +9,7 @@ export interface IMessage extends Document {
   updatedAt: Date;
 }
 
+
 const MessageSchema = new Schema<IMessage>(
   {
     studentId: {
