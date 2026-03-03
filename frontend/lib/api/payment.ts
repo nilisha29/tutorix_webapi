@@ -13,6 +13,7 @@ export const initiatePayment = async (payload: {
   return response.data;
 };
 
+
 export const verifyPayment = async (payload: {
   bookingId: string;
   provider?: "esewa" | "khalti";

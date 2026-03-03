@@ -15,6 +15,7 @@ export const updateMyProfile = async (profileData: any) => {
   return response.data;
 };
 
+
 export const becomeTutor = async (payload: FormData | Record<string, any>) => {
   const response = await axios.put(API.AUTH.TUTOR.BECOME, payload, {
     headers: payload instanceof FormData ? { "Content-Type": "multipart/form-data" } : undefined,
