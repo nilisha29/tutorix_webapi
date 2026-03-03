@@ -5,7 +5,7 @@ import axios from "../axios";
 export const createUser = async (userData: any) => {
     try {
         const response = await axios.post(
-            API.ADMIN.USER.CREATE,
+            API.ADMIN.USER.BASE,
             userData,
             {
                 headers: {
@@ -22,7 +22,7 @@ export const createUser = async (userData: any) => {
 
 export const getAllUsers = async () => {
     try {
-        const response = await axios.get(API.ADMIN.USER.GET_ALL);
+        const response = await axios.get(API.ADMIN.USER.BASE);
         return response.data.data; // Extract the data array from the response
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message
@@ -32,7 +32,7 @@ export const getAllUsers = async () => {
 
 export const getUserById = async (id: string) => {
     try {
-        const response = await axios.get(`${API.ADMIN.USER.GET_BY_ID}${id}`);
+        const response = await axios.get(`${API.ADMIN.USER.BASE}/${id}`);
         return response.data.data; // Extract the data object from the response
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message
@@ -43,7 +43,7 @@ export const getUserById = async (id: string) => {
 export const updateUser = async (id: string, userData: any) => {
     try {
         const response = await axios.put(
-            `${API.ADMIN.USER.UPDATE}${id}`,
+            `${API.ADMIN.USER.BASE}/${id}`,
             userData,
             {
                 headers: {
@@ -60,7 +60,7 @@ export const updateUser = async (id: string, userData: any) => {
 
 export const deleteUser = async (id: string) => {
     try {
-        const response = await axios.delete(`${API.ADMIN.USER.DELETE}${id}`);
+        const response = await axios.delete(`${API.ADMIN.USER.BASE}/${id}`);
         return response.data.data; // Extract the data from the response
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message
@@ -75,7 +75,7 @@ export const updateTutorReview = async (
 ) => {
     try {
         const response = await axios.put(
-            `${API.ADMIN.USER.UPDATE}${tutorId}/reviews/${reviewerId}`,
+            `${API.ADMIN.USER.BASE}/${tutorId}/reviews/${reviewerId}`,
             reviewData
         );
         return response.data.data;
@@ -87,7 +87,7 @@ export const updateTutorReview = async (
 
 export const deleteTutorReview = async (tutorId: string, reviewerId: string) => {
     try {
-        const response = await axios.delete(`${API.ADMIN.USER.DELETE}${tutorId}/reviews/${reviewerId}`);
+        const response = await axios.delete(`${API.ADMIN.USER.BASE}/${tutorId}/reviews/${reviewerId}`);
         return response.data.data;
     } catch (error: Error | any) {
         throw new Error(error.response?.data?.message

@@ -11,7 +11,7 @@ export const handleCreateUser = async (data: FormData) => {
         const token = cookieStore.get("auth_token")?.value;
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
-        const response = await fetch(`${baseUrl}${API.ADMIN.USER.CREATE}`, {
+        const response = await fetch(`${baseUrl}${API.ADMIN.USER.BASE}`, {
             method: "POST",
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: data,
@@ -44,7 +44,7 @@ export const handleUpdateUser = async (id: string, data: FormData) => {
         const token = cookieStore.get("auth_token")?.value;
         const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
 
-        const response = await fetch(`${baseUrl}${API.ADMIN.USER.UPDATE}${id}`, {
+        const response = await fetch(`${baseUrl}${API.ADMIN.USER.BASE}/${id}`, {
             method: "PUT",
             headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             body: data,
@@ -84,7 +84,7 @@ export const handleBecomeTutor = async (data: FormData) => {
             };
         }
 
-        const response = await fetch(`${baseUrl}/api/auth/become-tutor`, {
+        const response = await fetch(`${baseUrl}${API.AUTH.TUTOR.BECOME}`, {
             method: "PUT",
             headers: { Authorization: `Bearer ${token}` },
             body: data,
