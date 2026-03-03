@@ -80,6 +80,7 @@ export const UserSchema = z.object({
     // firstName: z.string().optional(),
     // lastName: z.string().optional(),
     role: z.enum(['admin', 'user', 'tutor']).default('user'),
+    tutorOrigin: z.enum(['admin', 'self']).optional(),
     resetPasswordToken: z.string().optional(),
     resetPasswordExpiresAt: z.coerce.date().optional(),
 });

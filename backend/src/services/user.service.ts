@@ -329,6 +329,7 @@ export class UserService {
     // Prepare the update data
     const updateData: any = {
       role: "tutor",
+      tutorOrigin: "self",
       about: tutorData.about,
       experienceYears: tutorData.experienceYears,
       responseTime: tutorData.responseTime,

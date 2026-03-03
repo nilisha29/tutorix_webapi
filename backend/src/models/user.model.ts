@@ -118,6 +118,11 @@ const UserSchema: Schema = new Schema<UserType>(
       enum: ["user", "admin", "tutor"],
       default: "user",
     },
+    tutorOrigin: {
+      type: String,
+      enum: ["admin", "self"],
+      required: false,
+    },
     resetPasswordToken: {
       type: String,
       required: false,
