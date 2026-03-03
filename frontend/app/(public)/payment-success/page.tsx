@@ -142,6 +142,7 @@ export default function PaymentSuccessPage() {
           }
         }
 
+        
         setStatus("failed");
         setMessage("Payment verification could not be completed. Please check My Bookings.");
       } catch (error: Error | any) {
