@@ -80,7 +80,10 @@ export const API = {
   MESSAGES: {
     BASE: "/api/messages",
     SEND: "/api/messages",
+    REPLY: "/api/messages/reply",
     TUTOR_INBOX: "/api/messages/tutor",
+    STUDENT_INBOX: "/api/messages/student",
+    DELETE_CONVERSATION: (partnerId: string) => `/api/messages/conversation/${partnerId}`,
     BY_ID: (messageId: string) => `/api/messages/${messageId}`,
     DELETE: (messageId: string) => `/api/messages/${messageId}`,
   },

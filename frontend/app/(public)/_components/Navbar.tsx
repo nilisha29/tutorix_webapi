@@ -73,6 +73,7 @@ export default function Navbar() {
 
   // Show authenticated UI if user exists OR if isAuthenticated is true
   const shouldShowAuthUI = isAuthenticated || !!user;
+  const messagesHref = user?.role === "tutor" ? "/tutor/messages" : "/user/messages";
 
   return (
     <nav className="sticky top-0 z-50 w-full bg-green-100 shadow-sm">
@@ -151,6 +152,14 @@ export default function Navbar() {
                     onClick={() => setOpen(false)}
                   >
                     Saved
+                  </Link>
+
+                  <Link
+                    href={messagesHref}
+                    className="block px-4 py-2 hover:bg-gray-100"
+                    onClick={() => setOpen(false)}
+                  >
+                    Messages
                   </Link>
 
                   <Link
