@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from "mongoose";
 export interface IMessage extends Document {
   studentId: mongoose.Types.ObjectId;
   tutorId: mongoose.Types.ObjectId;
+  senderRole: "student" | "tutor";
   content: string;
   isRead: boolean;
   createdAt: Date;
@@ -23,6 +24,12 @@ const MessageSchema = new Schema<IMessage>(
       ref: "User",
       required: true,
       index: true,
+    },
+    senderRole: {
+      type: String,
+      enum: ["student", "tutor"],
+      required: true,
+      default: "student",
     },
     content: {
       type: String,
