@@ -150,4 +150,63 @@ export class BookingController {
       });
     }
   }
+
+  async getBookingByIdForAdmin(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const booking = await bookingService.getBookingByIdForAdmin(id);
+      return res.status(200).json({
+        success: true,
+        message: "Booking retrieved",
+        data: booking,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async updateBookingByIdForAdmin(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const booking = await bookingService.updateBookingByIdForAdmin(id, {
+        date: req.body.date,
+        time: req.body.time,
+        duration: req.body.duration,
+        paymentMethod: req.body.paymentMethod,
+        amount: req.body.amount !== undefined ? Number(req.body.amount) : undefined,
+        paymentStatus: req.body.paymentStatus,
+        bookingStatus: req.body.bookingStatus,
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Booking updated",
+        data: booking,
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
+
+  async deleteBookingByIdForAdmin(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const deleted = await bookingService.deleteBookingByIdForAdmin(id);
+      return res.status(200).json({
+        success: true,
+        message: deleted ? "Booking deleted" : "Booking not deleted",
+      });
+    } catch (error: any) {
+      return res.status(error.statusCode || 500).json({
+        success: false,
+        message: error.message || "Internal Server Error",
+      });
+    }
+  }
 }
