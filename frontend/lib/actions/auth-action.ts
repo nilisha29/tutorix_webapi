@@ -98,7 +98,21 @@ export async function handleWhoAmI() {
 
 export async function handleUpdateProfile(profileData: FormData) {
     try {
-        const result = await updateProfile(profileData);
+        const token = await getAuthToken();
+        if (!token) {
+            return { success: false, message: "Unauthorized" };
+        }
+
+        const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+        const response = await fetch(`${baseUrl}/api/auth/update-profile`, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            body: profileData,
+        });
+
+        const result = await response.json();
         if (result.success) {
             await setUserData(result.data); // update cookie 
             revalidatePath('/user/profile'); // revalidate profile page/ refresh new data
