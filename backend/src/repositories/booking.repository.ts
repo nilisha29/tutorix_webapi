@@ -10,6 +10,13 @@ export class BookingRepository {
     return await BookingModel.findById(bookingId).exec();
   }
 
+  async getBookingByIdForAdmin(bookingId: string) {
+    return await BookingModel.findById(bookingId)
+      .populate("studentId", "fullName username email profileImage")
+      .populate("tutorId", "fullName username email profileImage")
+      .exec();
+  }
+
   async updatePaymentStatus(
     bookingId: string,
     payload: {
@@ -51,5 +58,41 @@ export class BookingRepository {
       .populate("tutorId", "fullName username email profileImage")
       .sort({ createdAt: -1 })
       .exec();
+  }
+
+  async updateBookingById(
+    bookingId: string,
+    payload: Partial<{
+      date: string;
+      time: string;
+      duration: string;
+      paymentMethod: "esewa" | "khalti";
+      amount: number;
+      paymentStatus: "pending" | "paid" | "failed";
+      bookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+    }>
+  ) {
+    return await BookingModel.findByIdAndUpdate(
+      bookingId,
+      {
+        $set: {
+          ...(payload.date !== undefined ? { date: payload.date } : {}),
+          ...(payload.time !== undefined ? { time: payload.time } : {}),
+          ...(payload.duration !== undefined ? { duration: payload.duration } : {}),
+          ...(payload.paymentMethod !== undefined ? { paymentMethod: payload.paymentMethod } : {}),
+          ...(payload.amount !== undefined ? { amount: payload.amount } : {}),
+          ...(payload.paymentStatus !== undefined ? { paymentStatus: payload.paymentStatus } : {}),
+          ...(payload.bookingStatus !== undefined ? { bookingStatus: payload.bookingStatus } : {}),
+        },
+      },
+      { new: true }
+    )
+      .populate("studentId", "fullName username email profileImage")
+      .populate("tutorId", "fullName username email profileImage")
+      .exec();
+  }
+
+  async deleteBookingById(bookingId: string) {
+    return await BookingModel.findByIdAndDelete(bookingId).exec();
   }
 }
