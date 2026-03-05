@@ -13,8 +13,10 @@ type TutorReview = {
 
 export default function TutorReviewsPage() {
   const [reviews, setReviews] = useState<TutorReview[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     const loadReviews = async () => {
@@ -32,6 +34,18 @@ export default function TutorReviewsPage() {
 
     loadReviews();
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(reviews.length / ITEMS_PER_PAGE));
+  const paginatedReviews = reviews.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <div className="space-y-6 p-6">
@@ -58,7 +72,7 @@ export default function TutorReviewsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {reviews.map((review, index) => (
+              {paginatedReviews.map((review, index) => (
                 <tr key={`${review.reviewerId || "review"}-${index}`} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-sm font-medium text-gray-800">{review.name || "Student"}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{review.detail || "-"}</td>
@@ -68,6 +82,36 @@ export default function TutorReviewsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {!loading && !error && reviews.length > ITEMS_PER_PAGE && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-gray-500">
+            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+            -{Math.min(currentPage * ITEMS_PER_PAGE, reviews.length)} of {reviews.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Prev
+            </button>
+
+            <span className="text-xs font-semibold text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
     </div>

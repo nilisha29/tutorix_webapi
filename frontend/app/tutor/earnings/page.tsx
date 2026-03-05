@@ -5,6 +5,8 @@ import { getMyTutorBookings } from "@/lib/api/booking";
 
 export default function TutorEarningsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -36,6 +38,18 @@ export default function TutorEarningsPage() {
     };
   }, [bookings]);
 
+  const totalPages = Math.max(1, Math.ceil(stats.paidBookings.length / ITEMS_PER_PAGE));
+  const paginatedPaidBookings = stats.paidBookings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   return (
     <div>
       <h1 className="text-3xl font-bold text-blue-600 mb-8">Earnings & Payments</h1>
@@ -56,14 +70,69 @@ export default function TutorEarningsPage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {stats.paidBookings.map((booking) => (
-              <div key={booking._id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm text-gray-700">Date: {booking.date}</p>
-                <p className="text-sm text-gray-700">Student: {booking.studentId?.fullName || "Student"}</p>
-                <p className="text-sm font-semibold text-green-700">Amount: Rs {Number(booking.amount || 0).toFixed(2)}</p>
-              </div>
-            ))}
+          <div className="overflow-x-auto rounded-xl border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Time</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Student</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Duration</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {paginatedPaidBookings.map((booking) => (
+                  <tr key={booking._id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.date || "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.time || "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 font-medium">
+                      {booking.studentId?.fullName || booking.studentId?.username || "Student"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">{booking.duration || "-"}</td>
+                    <td className="px-4 py-3 text-sm text-right font-semibold text-green-700">
+                      Rs {Number(booking.amount || 0).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+                        Paid
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {stats.paidBookings.length > ITEMS_PER_PAGE && (
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-xs text-gray-500">
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+              -{Math.min(currentPage * ITEMS_PER_PAGE, stats.paidBookings.length)} of {stats.paidBookings.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Prev
+              </button>
+
+              <span className="text-xs font-semibold text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>

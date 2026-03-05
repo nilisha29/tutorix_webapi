@@ -5,8 +5,10 @@ import { getMyTutorBookings } from "@/lib/api/booking";
 
 export default function TutorBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const ITEMS_PER_PAGE = 5;
 
   
   useEffect(() => {
@@ -25,6 +27,18 @@ export default function TutorBookingsPage() {
 
     fetchBookings();
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(bookings.length / ITEMS_PER_PAGE));
+  const paginatedBookings = bookings.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   return (
     <div>
@@ -57,7 +71,7 @@ export default function TutorBookingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.map((booking) => (
+                {paginatedBookings.map((booking) => (
                   <tr key={booking._id} className="border-t border-gray-200 hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm font-medium text-gray-800">{booking.studentId?.fullName || "Student"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{booking.date}</td>
@@ -70,6 +84,36 @@ export default function TutorBookingsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!loading && !error && bookings.length > ITEMS_PER_PAGE && (
+          <div className="mt-4 flex items-center justify-between">
+            <p className="text-xs text-gray-500">
+              Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}
+              -{Math.min(currentPage * ITEMS_PER_PAGE, bookings.length)} of {bookings.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={currentPage === 1}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Prev
+              </button>
+
+              <span className="text-xs font-semibold text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                disabled={currentPage === totalPages}
+                className="rounded-md border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
