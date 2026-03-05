@@ -5,6 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { resetPassword } from "@/lib/api/auth";
 
+const clearClientAuthCookies = () => {
+	document.cookie = "auth_token=; Max-Age=0; path=/";
+	document.cookie = "user_data=; Max-Age=0; path=/";
+};
+
 export default function ResetPasswordPage() {
 	const searchParams = useSearchParams();
 	const router = useRouter();
@@ -40,9 +45,11 @@ export default function ResetPasswordPage() {
 			setLoading(true);
 			const result = await resetPassword({ token, password });
 			setSuccess(result.message || "Password reset successful");
+			// Ensure any previous session is cleared before navigating to login.
+			clearClientAuthCookies();
 
 			setTimeout(() => {
-				router.push("/login");
+				router.replace("/login");
 			}, 1500);
 		} catch (err: Error | any) {
 			setError(err.message || "Failed to reset password");
