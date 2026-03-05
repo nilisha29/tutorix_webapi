@@ -9,13 +9,11 @@ export default function ForgotPasswordPage() {
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState("");
-	const [resetUrl, setResetUrl] = useState("");
 
 	const onSubmit = async (event: React.FormEvent) => {
 		event.preventDefault();
 		setError("");
 		setSuccess("");
-		setResetUrl("");
 
 		if (!email.trim()) {
 			setError("Please enter your email");
@@ -25,10 +23,7 @@ export default function ForgotPasswordPage() {
 		try {
 			setLoading(true);
 			const result = await forgotPassword(email.trim());
-			setSuccess(result.message || "Password reset link generated.");
-			if (result.resetUrl) {
-				setResetUrl(result.resetUrl);
-			}
+			setSuccess(result.message || "If that email is registered, a reset link has been sent.");
 		} catch (err: Error | any) {
 			setError(err.message || "Failed to process request");
 		} finally {
@@ -62,11 +57,6 @@ export default function ForgotPasswordPage() {
 
 				{error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 				{success && <p className="mt-3 text-sm text-green-700">{success}</p>}
-				{resetUrl && (
-					<p className="mt-2 text-sm text-blue-700 break-all">
-						Reset link: <Link href={resetUrl} className="underline">{resetUrl}</Link>
-					</p>
-				)}
 
 				<p className="mt-5 text-sm">
 					Back to{" "}
