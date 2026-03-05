@@ -86,6 +86,7 @@ describe("Booking Service", () => {
     });
   });
 
+  
   it("throws 400 when student id is invalid", async () => {
     const tutor = await createUser("tutor");
 
