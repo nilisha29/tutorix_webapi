@@ -4,10 +4,12 @@ import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import { UserData, UserSchema } from "@/app/admin/users/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import { handleCreateUser } from "@/lib/actions/admin/user-action";
+import { createUser } from "@/lib/api/admin/user";
 
 export default function CreateTutorForm() {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
   const { register, handleSubmit, control, reset, formState: { errors, isSubmitting } } = useForm<UserData>({
     resolver: zodResolver(UserSchema) as any
@@ -130,13 +132,20 @@ export default function CreateTutorForm() {
           formData.append("profileImage", data.image);
         }
 
-        const response = await handleCreateUser(formData);
+        const response = await createUser(formData);
         if (!response.success) {
           throw new Error(response.message || "Create tutor failed");
         }
+
+        const createdTutorId = response?.data?._id;
         reset();
         handleDismissImage();
         toast.success("Tutor created successfully");
+        if (createdTutorId) {
+          router.replace(`/admin/tutors/${createdTutorId}`);
+        } else {
+          router.replace("/admin/tutors/");
+        }
       } catch (err: Error | any) {
         toast.error(err.message || "Create tutor failed");
         setError(err.message || "Create tutor failed");
