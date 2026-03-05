@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getAllBookingsForAdmin } from "@/lib/api/booking";
+import { useRouter } from "next/navigation";
+import { deleteBookingByIdForAdmin, getAllBookingsForAdmin } from "@/lib/api/booking";
 
 export default function AdminPaymentsPage() {
+  const router = useRouter();
   const [payments, setPayments] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -83,6 +85,24 @@ export default function AdminPaymentsPage() {
     }
   }, [currentPage, totalPages]);
 
+  const handleViewPayment = (paymentId: string) => {
+    router.push(`/admin/payments/${paymentId}`);
+  };
+
+  const handleEditPayment = (paymentId: string) => {
+    router.push(`/admin/payments/${paymentId}?mode=edit`);
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!confirm("Delete this payment from the list?")) return;
+    try {
+      await deleteBookingByIdForAdmin(paymentId);
+      setPayments((prev) => prev.filter((item) => item._id !== paymentId));
+    } catch (err: Error | any) {
+      alert(err.message || "Failed to delete payment record");
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-3xl font-bold text-blue-600">Payments</h1>
@@ -140,6 +160,7 @@ export default function AdminPaymentsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Payment Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Booking Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -151,6 +172,28 @@ export default function AdminPaymentsPage() {
                     <td className="px-4 py-3 text-sm text-gray-700">{item.paymentStatus || "-"}</td>
                     <td className="px-4 py-3 text-sm text-gray-700">{item.bookingStatus || "-"}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-green-700">Rs {item.amount || 0}</td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => handleViewPayment(item._id)}
+                          className="rounded-md bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-200"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => handleEditPayment(item._id)}
+                          className="rounded-md bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeletePayment(item._id)}
+                          className="rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
