@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { getAllUsers, updateTutorReview, deleteTutorReview } from "@/lib/api/admin/user";
 
 type Review = {
@@ -27,6 +28,7 @@ type UserLite = {
 };
 
 export default function AdminReviewsPage() {
+  const router = useRouter();
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [userMap, setUserMap] = useState<Record<string, UserLite>>({});
   const [searchQuery, setSearchQuery] = useState("");
@@ -285,8 +287,13 @@ export default function AdminReviewsPage() {
                       ) : (
                         <div className="flex items-center justify-center gap-2">
                           <button
-                            onClick={() => startEdit(tutorId, review, index)}
-                            disabled={!review.reviewerId}
+                            onClick={() => router.push(`/admin/tutors/${tutorId}`)}
+                            className="rounded-md bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-200"
+                          >
+                            View
+                          </button>
+                          <button
+                            onClick={() => router.push(`/admin/tutors/${tutorId}`)}
                             className="rounded-md bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200 disabled:opacity-50"
                           >
                             Edit
