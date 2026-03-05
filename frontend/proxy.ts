@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthToken, getUserData} from "@/lib/cookie";
 
-const publicRoutes = ['/login', '/register', '/forget-password', '/reset-password'];
+const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 const adminRoutes = ['/admin'];
 const userRoutes = ['/user'];
 
