@@ -20,6 +20,8 @@ export default function TutorProfilePage() {
   const { user, checkAuth } = useAuth();
   const initialAvailabilitySlots = useMemo(() => normalizeAvailabilitySlots(user?.availabilitySlots), [user?.availabilitySlots]);
   const [isEditing, setIsEditing] = useState(false);
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const [profileImagePreview, setProfileImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     about: user?.about || "",
     experienceYears: user?.experienceYears || 0,
@@ -32,6 +34,15 @@ export default function TutorProfilePage() {
   const [availabilitySlots, setAvailabilitySlots] = useState<Array<{ day: string; times: string[] }>>(initialAvailabilitySlots);
   const [message, setMessage] = useState("");
 
+  const getProfileImageUrl = () => {
+    if (profileImagePreview) return profileImagePreview;
+    const rawUrl = user?.profileImage || user?.imageUrl;
+    if (!rawUrl) return "";
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5050";
+    const imageUrl = rawUrl.startsWith("http") ? rawUrl : `${baseUrl}${rawUrl}`;
+    return imageUrl.replace("10.0.2.2", "localhost");
+  };
+
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
@@ -42,6 +53,23 @@ export default function TutorProfilePage() {
         ? parseFloat(value) 
         : value,
     }));
+  };
+
+  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    setProfileImageFile(file);
+
+    if (file && !isEditing) {
+      setIsEditing(true);
+    }
+
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setProfileImagePreview(reader.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setProfileImagePreview(null);
+    }
   };
 
   const addAvailabilityTime = () => {
@@ -93,6 +121,8 @@ export default function TutorProfilePage() {
     setAvailabilityDate("");
     setAvailabilityTime("");
     setAvailabilityTimes([]);
+    setProfileImageFile(null);
+    setProfileImagePreview(null);
     setIsEditing(true);
   };
 
@@ -102,6 +132,8 @@ export default function TutorProfilePage() {
     setAvailabilityDate("");
     setAvailabilityTime("");
     setAvailabilityTimes([]);
+    setProfileImageFile(null);
+    setProfileImagePreview(null);
   };
 
   const handleSave = async () => {
@@ -112,6 +144,9 @@ export default function TutorProfilePage() {
       payload.append("pricePerHour", String(formData.pricePerHour || 0));
       payload.append("responseTime", String(formData.responseTime || ""));
       payload.append("availabilitySlots", JSON.stringify(availabilitySlots));
+      if (profileImageFile) {
+        payload.append("profileImage", profileImageFile);
+      }
 
       const response = await updateProfile(payload);
       if (!response?.success) {
@@ -121,6 +156,8 @@ export default function TutorProfilePage() {
       await checkAuth();
       setMessage("Profile updated successfully!");
       setIsEditing(false);
+      setProfileImageFile(null);
+      setProfileImagePreview(null);
 
       setTimeout(() => setMessage(""), 3000);
     } catch (error: any) {
@@ -154,6 +191,42 @@ export default function TutorProfilePage() {
 
       <div className="bg-white rounded-lg shadow-md p-8 max-w-2xl">
         <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Profile Image
+            </label>
+            <div className="flex items-center gap-4">
+              {getProfileImageUrl() ? (
+                <img
+                  src={getProfileImageUrl()}
+                  alt={user?.fullName || user?.username || "Tutor"}
+                  className="h-20 w-20 rounded-full object-cover border border-gray-300"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full bg-emerald-100 text-emerald-700 text-xl font-semibold flex items-center justify-center">
+                  {String(user?.fullName || user?.username || "T").charAt(0).toUpperCase()}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="tutor-profile-image"
+                  className="inline-block cursor-pointer rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  Change Profile
+                </label>
+                <input
+                  id="tutor-profile-image"
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp"
+                  onChange={handleProfileImageChange}
+                  className="hidden"
+                />
+                <p className="text-xs text-gray-500">JPG, PNG or WEBP up to 5MB</p>
+              </div>
+            </div>
+          </div>
+
           {/* About */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
