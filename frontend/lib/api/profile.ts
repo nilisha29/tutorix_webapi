@@ -2,12 +2,12 @@ import axios from "./axios";
 import { API } from "./endpoints";
 
 export const getMyProfile = async () => {
-  const response = await axios.get(API.AUTH.PROFILE.WHOAMI);
+  const response = await axios.get(API.AUTH.WHOAMI);
   return response.data;
 };
 
 export const updateMyProfile = async (profileData: any) => {
-  const response = await axios.put(API.AUTH.PROFILE.UPDATE, profileData, {
+  const response = await axios.put(API.AUTH.UPDATE_PROFILE, profileData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },

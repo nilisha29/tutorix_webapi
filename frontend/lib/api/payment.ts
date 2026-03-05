@@ -9,7 +9,7 @@ export const initiatePayment = async (payload: {
   paymentMethod: "esewa" | "khalti";
   amount: number;
 }) => {
-  const response = await axios.post(API.PAYMENTS.INITIATE, payload);
+  const response = await axios.post(API.BOOKINGS.PAYMENTS.INITIATE, payload);
   return response.data;
 };
 
@@ -23,6 +23,6 @@ export const verifyPayment = async (payload: {
   transactionUuid?: string;
   gatewayTxnId?: string;
 }) => {
-  const response = await axios.post(API.PAYMENTS.VERIFY, payload);
+  const response = await axios.post(API.BOOKINGS.PAYMENTS.VERIFY, payload);
   return response.data;
 };
