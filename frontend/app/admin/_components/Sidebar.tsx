@@ -75,14 +75,14 @@ export default function Sidebar() {
     href === "/admin" ? pathname === href : pathname.startsWith(href);
  
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-50">
+    <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 border-r border-slate-700 z-50">
 
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-gray-200 dark:border-gray-800">
-        <div className="h-9 w-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
+      <div className="h-16 flex items-center px-6 border-b border-slate-700">
+        <div className="h-9 w-9 rounded-lg bg-indigo-500 text-white flex items-center justify-center font-bold">
           A
         </div>
-        <span className="ml-3 font-semibold text-gray-800 dark:text-gray-100">
+        <span className="ml-3 font-semibold text-slate-100">
           Admin Panel
         </span>
       </div>
@@ -96,8 +96,8 @@ export default function Sidebar() {
             className={`block px-4 py-2 rounded-md text-sm font-medium transition
               ${
                 isActive(link.href)
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800"
+                  ? "bg-indigo-500 text-white"
+                  : "text-slate-200 hover:bg-slate-800"
               }
             `}
           >
