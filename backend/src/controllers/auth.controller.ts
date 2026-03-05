@@ -365,7 +365,10 @@ export class AuthController {
       }
 
       const result = await userService.forgotPassword(email);
-      return res.status(200).json(result);
+      return res.status(200).json({
+        success: true,
+        message: result.message || "If that email is registered, a reset link has been sent.",
+      });
     } catch (error: any) {
       return res.status(error.statusCode || 500).json({
         success: false,
