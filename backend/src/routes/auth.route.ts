@@ -3,9 +3,9 @@ import { AuthController } from "../controllers/auth.controller";
 import { authorizedMiddleware, adminOnlyMiddleware } from "../middlewares/authorization.middleware";
 import { uploads } from "../middlewares/upload.middleware";
 import { AdminUserController } from "../controllers/admin/user.controller";
-import passwordRoutes from "./auth/password.route";
-import authTutorRoutes from "./auth/tutor.route";
-import authProfileRoutes from "./auth/profile.route";
+import passwordRoutes from "./password.route";
+import authTutorRoutes from "./auth-tutor.route";
+import authProfileRoutes from "./profile.route";
 
 let authController = new AuthController();
 let adminUserController = new AdminUserController();

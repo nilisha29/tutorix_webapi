@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { TutorController } from "../controllers/tutor.controller";
-import tutorReviewRoutes from "./tutor/review.route";
+import tutorReviewRoutes from "./tutor-review.route";
 
 const router = Router();
 const tutorController = new TutorController();
