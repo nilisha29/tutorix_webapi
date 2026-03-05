@@ -134,4 +134,47 @@ export class BookingService {
   async getAllBookings() {
     return await bookingRepository.getAllBookings();
   }
+
+  async getBookingByIdForAdmin(bookingId: string) {
+    const booking = await bookingRepository.getBookingByIdForAdmin(bookingId);
+    if (!booking) {
+      throw new HttpError(404, "Booking not found");
+    }
+    return booking;
+  }
+
+  async updateBookingByIdForAdmin(
+    bookingId: string,
+    payload: Partial<{
+      date: string;
+      time: string;
+      duration: string;
+      paymentMethod: "esewa" | "khalti";
+      amount: number;
+      paymentStatus: "pending" | "paid" | "failed";
+      bookingStatus: "pending" | "confirmed" | "cancelled" | "completed";
+    }>
+  ) {
+    const existing = await bookingRepository.getBookingById(bookingId);
+    if (!existing) {
+      throw new HttpError(404, "Booking not found");
+    }
+
+    const updated = await bookingRepository.updateBookingById(bookingId, payload);
+    if (!updated) {
+      throw new HttpError(500, "Failed to update booking");
+    }
+
+    return updated;
+  }
+
+  async deleteBookingByIdForAdmin(bookingId: string) {
+    const existing = await bookingRepository.getBookingById(bookingId);
+    if (!existing) {
+      throw new HttpError(404, "Booking not found");
+    }
+
+    const deleted = await bookingRepository.deleteBookingById(bookingId);
+    return !!deleted;
+  }
 }
