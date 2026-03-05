@@ -18,6 +18,7 @@ function buildUserPayload(label: string) {
   };
 }
 
+
 async function createUserAndLogin(role: "user" | "admin" | "tutor" = "user") {
   const payload = buildUserPayload(role);
   await request(app).post("/api/auth/register").send(payload);
