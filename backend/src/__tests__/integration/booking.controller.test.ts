@@ -123,6 +123,7 @@ describe("Booking Controller Integration", () => {
     expect(res.body.success).toBe(false);
   });
 
+  
   it("returns 401 for payment initiate/verify without auth", async () => {
     const initRes = await request(app).post("/api/bookings/payments/initiate").send({});
     expect(initRes.status).toBe(401);

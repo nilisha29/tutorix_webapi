@@ -17,7 +17,6 @@ function buildUserPayload() {
   };
 }
 
-
 describe("Auth Controller Integration", () => {
   afterAll(async () => {
     await UserModel.deleteMany({
