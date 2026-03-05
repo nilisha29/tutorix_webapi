@@ -125,8 +125,19 @@ export class UserService {
   // CREATE USER
   // =========================
   async createUser(data: CreateUserDTO) {
+    const normalizedEmail = String(data.email || "").trim().toLowerCase();
+    const normalizedPassword = String(data.password || "").trim();
+
+    if (!normalizedEmail) {
+      throw new HttpError(400, "Email is required");
+    }
+
+    if (normalizedPassword.length < 6) {
+      throw new HttpError(400, "Password must be at least 6 characters");
+    }
+
     // Check email uniqueness
-    const emailExists = await userRepository.getUserByEmail(data.email);
+    const emailExists = await userRepository.getUserByEmail(normalizedEmail);
     if (emailExists) {
       throw new HttpError(403, "Email already in use");
     }
@@ -138,13 +149,13 @@ export class UserService {
     }
 
     // Hash password
-    const hashedPassword = await bcryptjs.hash(data.password, 10);
+    const hashedPassword = await bcryptjs.hash(normalizedPassword, 10);
     data.password = hashedPassword;
 
     // Create user in DB
     const newUser = await userRepository.createUser({
       fullName: data.fullName,
-      email: data.email,
+      email: normalizedEmail,
       username: data.username,
       password: hashedPassword,
       phoneNumber: data.phoneNumber,
@@ -159,13 +170,16 @@ export class UserService {
   // LOGIN USER
   // =========================
   async loginUser(data: LoginUserDTO) {
-    const user = await userRepository.getUserByEmail(data.email);
+    const normalizedEmail = String(data.email || "").trim().toLowerCase();
+    const normalizedPassword = String(data.password || "").trim();
+
+    const user = await userRepository.getUserByEmail(normalizedEmail);
     if (!user) {
       throw new HttpError(404, "User not found");
     }
 
     // Compare password
-    const isPasswordValid = await bcryptjs.compare(data.password, user.password);
+    const isPasswordValid = await bcryptjs.compare(normalizedPassword, user.password);
     if (!isPasswordValid) {
       throw new HttpError(401, "Invalid credentials");
     }
@@ -408,7 +422,11 @@ export class UserService {
         <p>We received a request to reset your password.</p>
         <p>This link will expire in 15 minutes.</p>
         <p style="margin: 20px 0;">
-          <a href="${resetUrl}" style="background: #2563eb; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+          <a href="${resetUrl}" style="background: #2563eb; color: #fff; padding: 10px 16px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Here</a>
+        </p>
+        <p>If the button does not work, open this link:</p>
+        <p style="word-break: break-all;">
+          <a href="${resetUrl}">${resetUrl}</a>
         </p>
         <p>If you did not request this, you can safely ignore this email.</p>
       </div>
@@ -418,24 +436,7 @@ export class UserService {
       await sendEmail(user.email, "Tutorix Password Reset", html);
     } catch (error) {
       await userRepository.clearResetPasswordToken(String(user._id));
-
-      if (process.env.NODE_ENV !== "production") {
-        return {
-          success: true,
-          message: "Email delivery failed in local environment. Use the debug reset link below.",
-          resetUrl,
-        };
-      }
-
       throw new HttpError(500, "Failed to send reset password email");
-    }
-
-    if (process.env.NODE_ENV !== "production") {
-      return {
-        success: true,
-        message: "If that email is registered, a reset link has been sent.",
-        resetUrl,
-      };
     }
 
     return {
@@ -460,6 +461,11 @@ export class UserService {
   }
 
   async resetPassword(token: string, newPassword: string) {
+    const normalizedPassword = String(newPassword || "").trim();
+    if (normalizedPassword.length < 6) {
+      throw new HttpError(400, "Password must be at least 6 characters");
+    }
+
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
     const user = await userRepository.getUserByResetPasswordToken(hashedToken);
 
@@ -467,11 +473,11 @@ export class UserService {
       throw new HttpError(400, "Invalid or expired reset token");
     }
 
-    const hashedPassword = await bcryptjs.hash(newPassword, 10);
-    await userRepository.updateUser(String(user._id), {
-      password: hashedPassword,
-    } as any);
-    await userRepository.clearResetPasswordToken(String(user._id));
+    const hashedPassword = await bcryptjs.hash(normalizedPassword, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiresAt = undefined;
+    await user.save();
 
     return {
       success: true,
@@ -488,27 +494,31 @@ export class UserService {
   }
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const normalizedCurrentPassword = String(currentPassword || "").trim();
+    const normalizedNewPassword = String(newPassword || "").trim();
+
     const user = await userRepository.getUserById(userId);
     if (!user) {
       throw new HttpError(404, "User not found");
     }
 
-    const currentMatches = await bcryptjs.compare(currentPassword, user.password);
+    const currentMatches = await bcryptjs.compare(normalizedCurrentPassword, user.password);
     if (!currentMatches) {
       throw new HttpError(400, "Current password is incorrect");
     }
 
-    if (newPassword.length < 6) {
+    if (normalizedNewPassword.length < 6) {
       throw new HttpError(400, "New password must be at least 6 characters");
     }
 
-    const isSameAsCurrent = await bcryptjs.compare(newPassword, user.password);
+    const isSameAsCurrent = await bcryptjs.compare(normalizedNewPassword, user.password);
     if (isSameAsCurrent) {
       throw new HttpError(400, "New password must be different from current password");
     }
 
-    const hashedPassword = await bcryptjs.hash(newPassword, 10);
-    await userRepository.updateUser(String(user._id), { password: hashedPassword } as any);
+    const hashedPassword = await bcryptjs.hash(normalizedNewPassword, 10);
+    user.password = hashedPassword;
+    await user.save();
 
     return {
       success: true,
