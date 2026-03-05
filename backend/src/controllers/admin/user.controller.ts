@@ -1,4 +1,4 @@
-import { CreateUserDTO, LoginUserDTO, UpdateUserDto } from "../../dtos/user.dto";
+import { CreateUserDTO, UpdateUserDto } from "../../dtos/user.dto";
 import { Request, Response, NextFunction } from "express";
 import z from "zod";
 import { AdminUserService } from "../../services/admin/user.service";
@@ -97,36 +97,6 @@ export class AdminUserController {
             return res.status(200).json(
                 { success: true, data: user, message: "Single User Retrieved" }
             );
-        } catch (error: Error | any) {
-            return res.status(error.statusCode ?? 500).json(
-                { success: false, message: error.message || "Internal Server Error" }
-            );
-        }
-    }
-
-    async updateTutorReview(req: Request, res: Response, next: NextFunction) {
-        try {
-            const tutorId = req.params.id;
-            const reviewerId = req.params.reviewerId;
-            const payload = {
-                quote: typeof req.body.quote === "string" ? req.body.quote : undefined,
-                rating: req.body.rating !== undefined ? Number(req.body.rating) : undefined,
-            };
-            const updatedTutor = await adminUserService.updateTutorReview(tutorId, reviewerId, payload);
-            return res.status(200).json({ success: true, message: "Review updated", data: updatedTutor });
-        } catch (error: Error | any) {
-            return res.status(error.statusCode ?? 500).json(
-                { success: false, message: error.message || "Internal Server Error" }
-            );
-        }
-    }
-
-    async deleteTutorReview(req: Request, res: Response, next: NextFunction) {
-        try {
-            const tutorId = req.params.id;
-            const reviewerId = req.params.reviewerId;
-            const updatedTutor = await adminUserService.deleteTutorReview(tutorId, reviewerId);
-            return res.status(200).json({ success: true, message: "Review deleted", data: updatedTutor });
         } catch (error: Error | any) {
             return res.status(error.statusCode ?? 500).json(
                 { success: false, message: error.message || "Internal Server Error" }
