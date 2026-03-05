@@ -17,6 +17,7 @@ type SettingsState = {
   profileVisibility: "public" | "private";
 };
 
+
 const defaultSettings: SettingsState = {
   emailNotifications: true,
   bookingReminders: true,
