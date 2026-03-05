@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getAllBookingsForAdmin } from "@/lib/api/booking";
+import { useRouter } from "next/navigation";
+import { deleteBookingByIdForAdmin, getAllBookingsForAdmin } from "@/lib/api/booking";
 
 export default function AdminBookingsPage() {
+  const router = useRouter();
   const [bookings, setBookings] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -67,6 +69,24 @@ export default function AdminBookingsPage() {
     }
   }, [currentPage, totalPages]);
 
+  const handleViewBooking = (bookingId: string) => {
+    router.push(`/admin/bookings/${bookingId}`);
+  };
+
+  const handleEditBooking = (bookingId: string) => {
+    router.push(`/admin/bookings/${bookingId}?mode=edit`);
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    if (!confirm("Delete this booking from the list?")) return;
+    try {
+      await deleteBookingByIdForAdmin(bookingId);
+      setBookings((prev) => prev.filter((item) => item._id !== bookingId));
+    } catch (err: Error | any) {
+      alert(err.message || "Failed to delete booking");
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <h1 className="text-3xl font-bold text-blue-600">All Bookings</h1>
@@ -103,6 +123,7 @@ export default function AdminBookingsPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Payment</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Booking</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Amount</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-gray-600">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
@@ -118,6 +139,28 @@ export default function AdminBookingsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">{booking.bookingStatus || "-"}</td>
                   <td className="px-4 py-3 text-sm font-semibold text-green-700">Rs {booking.amount || 0}</td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handleViewBooking(booking._id)}
+                        className="rounded-md bg-indigo-100 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-200"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => handleEditBooking(booking._id)}
+                        className="rounded-md bg-blue-100 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-200"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBooking(booking._id)}
+                        className="rounded-md bg-red-100 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
