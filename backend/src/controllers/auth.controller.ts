@@ -357,6 +357,8 @@ export class AuthController {
   async forgotPassword(req: Request, res: Response) {
     try {
       const email = String(req.body?.email || "").trim().toLowerCase();
+      const headerOrigin = String(req.headers["x-client-origin"] || req.headers.origin || "").trim();
+      const requestedOrigin = headerOrigin.replace(/\/+$/, "");
       if (!email) {
         return res.status(400).json({
           success: false,
@@ -364,7 +366,7 @@ export class AuthController {
         });
       }
 
-      const result = await userService.forgotPassword(email);
+      const result = await userService.forgotPassword(email, requestedOrigin);
       return res.status(200).json({
         success: true,
         message: result.message || "If that email is registered, a reset link has been sent.",

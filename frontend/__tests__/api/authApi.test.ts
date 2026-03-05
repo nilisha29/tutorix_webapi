@@ -49,9 +49,11 @@ describe("auth api helpers", () => {
 
     const result = await forgotPassword("user@test.com");
 
-    expect(axios.post).toHaveBeenCalledWith(API.AUTH.FORGOT_PASSWORD, {
-      email: "user@test.com",
-    });
+    expect(axios.post).toHaveBeenCalledWith(
+      API.AUTH.FORGOT_PASSWORD,
+      { email: "user@test.com" },
+      expect.anything()
+    );
     expect(result).toEqual(responseData);
   });
 

@@ -114,7 +114,7 @@ import { UserRepository } from "../repositories/user.repository";
 import bcryptjs from "bcryptjs";
 import { HttpError } from "../errors/http-error";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config";
+import { FRONTEND_BASE_URL, JWT_SECRET } from "../config";
 import crypto from "crypto";
 import { sendEmail } from "../config/email";
 
@@ -397,8 +397,9 @@ export class UserService {
     return savedTutor;
   }
 
-  async forgotPassword(email: string) {
-    const user = await userRepository.getUserByEmail(email);
+  async forgotPassword(email: string, requestedOrigin?: string) {
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const user = await userRepository.getUserByEmail(normalizedEmail);
 
     if (!user) {
       return {
@@ -414,7 +415,13 @@ export class UserService {
 
     await userRepository.setResetPasswordToken(String(user._id), hashedToken, expiresAt);
 
-    const frontendBaseUrl = process.env.FRONTEND_BASE_URL || "http://localhost:3000";
+    const normalizeBaseUrl = (value?: string) =>
+      String(value || "")
+        .trim()
+        .replace(/\/+$/, "");
+
+    const safeRequestedOrigin = normalizeBaseUrl(requestedOrigin);
+    const frontendBaseUrl = safeRequestedOrigin || normalizeBaseUrl(FRONTEND_BASE_URL) || "http://localhost:3000";
     const resetUrl = `${frontendBaseUrl}/reset-password?token=${rawToken}`;
     const html = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
@@ -450,9 +457,10 @@ export class UserService {
       throw new HttpError(400, "Email is required");
     }
 
-    await this.forgotPassword(email);
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    await this.forgotPassword(normalizedEmail);
 
-    const user = await userRepository.getUserByEmail(email);
+    const user = await userRepository.getUserByEmail(normalizedEmail);
     return {
       success: true,
       user,

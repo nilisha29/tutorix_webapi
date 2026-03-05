@@ -44,7 +44,20 @@ export const loginUser = async (loginData: any) => {
 
 export const forgotPassword = async (email: string) => {
   try {
-    const response = await axios.post(API.AUTH.FORGOT_PASSWORD, { email });
+    const originHeader =
+      typeof window !== "undefined" ? window.location.origin : undefined;
+
+    const response = await axios.post(
+      API.AUTH.FORGOT_PASSWORD,
+      { email },
+      originHeader
+        ? {
+            headers: {
+              "x-client-origin": originHeader,
+            },
+          }
+        : undefined
+    );
     return response.data;
   } catch (err: Error | any) {
     throw new Error(

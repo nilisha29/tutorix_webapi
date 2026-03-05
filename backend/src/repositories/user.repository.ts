@@ -43,7 +43,15 @@ export class UserRepository implements IUserRepository {
         return await user.save();
     }
     async getUserByEmail(email: string): Promise<IUser | null> {
-        const user = await UserModel.findOne({ "email": email })
+        const normalizedEmail = String(email || "").trim().toLowerCase();
+        const user = await UserModel.findOne({
+            $expr: {
+                $eq: [
+                    { $toLower: { $trim: { input: "$email" } } },
+                    normalizedEmail,
+                ],
+            },
+        });
         return user;
     }
     async getUserByUsername(username: string): Promise<IUser | null> {
