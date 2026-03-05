@@ -8,7 +8,7 @@ export const updateAdminTutorReview = async (
   payload: { quote?: string; rating?: number }
 ) => {
   const response = await axios.put(
-    `${API.ADMIN.USER.BASE}/${tutorId}/reviews/${reviewerId}`,
+    API.ADMIN.REVIEWS.REVIEW_BY_REVIEWER(tutorId, reviewerId),
     payload
   );
   return response.data;
@@ -16,7 +16,7 @@ export const updateAdminTutorReview = async (
 
 export const deleteAdminTutorReview = async (tutorId: string, reviewerId: string) => {
   const response = await axios.delete(
-    `${API.ADMIN.USER.BASE}/${tutorId}/reviews/${reviewerId}`
+    API.ADMIN.REVIEWS.REVIEW_BY_REVIEWER(tutorId, reviewerId)
   );
   return response.data;
 };
