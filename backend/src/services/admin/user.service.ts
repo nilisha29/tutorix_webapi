@@ -1,4 +1,4 @@
-import { CreateUserDTO, LoginUserDTO, UpdateUserDto } from "../../dtos/user.dto";
+import { CreateUserDTO, UpdateUserDto } from "../../dtos/user.dto";
 import { UserRepository } from "../../repositories/user.repository";
 import  bcryptjs from "bcryptjs"
 import { HttpError } from "../../errors/http-error";
@@ -66,30 +66,6 @@ export class AdminUserService {
             throw new HttpError(404, "User not found");
         }
         return user;
-    }
-
-    async updateTutorReview(tutorId: string, reviewerId: string, reviewData: { quote?: string; rating?: number }) {
-        const tutor = await userRepository.getTutorById(tutorId, false);
-        if (!tutor) {
-            throw new HttpError(404, "Tutor not found");
-        }
-        const updatedTutor = await userRepository.updateTutorReviewByReviewerId(tutorId, reviewerId, reviewData);
-        if (!updatedTutor) {
-            throw new HttpError(404, "Review not found");
-        }
-        return updatedTutor;
-    }
-
-    async deleteTutorReview(tutorId: string, reviewerId: string) {
-        const tutor = await userRepository.getTutorById(tutorId, false);
-        if (!tutor) {
-            throw new HttpError(404, "Tutor not found");
-        }
-        const updatedTutor = await userRepository.deleteTutorReviewByReviewerId(tutorId, reviewerId);
-        if (!updatedTutor) {
-            throw new HttpError(404, "Review not found");
-        }
-        return updatedTutor;
     }
 
 }
