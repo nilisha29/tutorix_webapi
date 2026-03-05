@@ -135,8 +135,7 @@ describe("Auth Integration", () => {
 			email: payload.email,
 			password: payload.password,
 		});
-
-		
+	
 		expect(loginRes.status).toBe(200);
 		expect(loginRes.body.success).toBe(true);
 		expect(typeof loginRes.body.token).toBe("string");
