@@ -3,11 +3,8 @@ import { UserSchema } from "../types/user.type";
 // re-use UserSchema from types
 
 const parseStringArray = (value: unknown, separator: RegExp) => {
-    console.log("[parseStringArray] Input:", { value, type: typeof value, isArray: Array.isArray(value) });
-    
     if (!value) return [];
     if (Array.isArray(value)) {
-        console.log("[parseStringArray] Already array, returning:", value);
         return value;
     }
     if (typeof value === "string") {
@@ -15,42 +12,31 @@ const parseStringArray = (value: unknown, separator: RegExp) => {
             .split(separator)
             .map((item) => item.trim())
             .filter(Boolean);
-        console.log("[parseStringArray] Converted string to array:", result);
         return result;
     }
-    console.log("[parseStringArray] Unknown type, returning empty array");
     return [];
 };
 
 const parseJsonArray = (value: unknown) => {
-    console.log("[parseJsonArray] Input:", { value, type: typeof value });
-    
     if (!value) return undefined;
     if (Array.isArray(value)) {
-        console.log("[parseJsonArray] Already array, returning:", value);
         return value;
     }
     if (typeof value === "string") {
         try {
             const parsed = JSON.parse(value);
             if (Array.isArray(parsed)) {
-                console.log("[parseJsonArray] Parsed JSON array:", parsed);
                 return parsed;
             }
         } catch (error) {
-            console.log("[parseJsonArray] JSON parse failed:", error);
         }
     }
-    console.log("[parseJsonArray] Returning undefined");
     return undefined;
 };
 
 const parseEducationArray = (value: unknown) => {
-    console.log("[parseEducationArray] Input:", { value, type: typeof value });
-    
     if (!value) return [];
     if (Array.isArray(value)) {
-        console.log("[parseEducationArray] Already array, returning:", value);
         return value;
     }
     if (typeof value === "string") {
@@ -58,10 +44,8 @@ const parseEducationArray = (value: unknown) => {
             .split(/\r?\n/)
             .map((item) => item.trim())
             .filter(Boolean);
-        console.log("[parseEducationArray] Converted to array:", lines);
         return lines.length ? lines : [];
     }
-    console.log("[parseEducationArray] Returning empty array");
     return [];
 };
 
@@ -129,7 +113,50 @@ export const LoginUserDTO = z.object({
 export type LoginUserDTO = z.infer<typeof LoginUserDTO>;
 
 
-export const UpdateUserDto = UserSchema.partial(); // all optional fields
+export const UpdateUserDto = z.object({
+    fullName: z.string().min(3).optional(),
+    username: z.string().min(3).optional(),
+    email: z.string().email().optional(),
+    password: z.string().min(6).optional(),
+    phoneNumber: z.string().optional(),
+    address: z.string().optional(),
+    profileImage: z.string().optional(),
+    subject: z.string().optional(),
+    gradeLevel: z.string().optional(),
+    pricePerHour: z.coerce.number().min(0).optional(),
+    rating: z.coerce.number().min(0).max(5).optional(),
+    reviewsCount: z.coerce.number().min(0).optional(),
+    about: z.string().optional(),
+    experienceYears: z.coerce.number().min(0).optional(),
+    responseTime: z.string().optional(),
+    languages: z.preprocess((value) => parseStringArray(value, /,/), z.array(z.string()).optional()),
+    tags: z.preprocess((value) => parseStringArray(value, /,/), z.array(z.string()).optional()),
+    education: z.preprocess((value) => parseEducationArray(value), z.array(z.string()).optional()),
+    availabilitySlots: z.preprocess(
+        (value) => parseJsonArray(value),
+        z.array(
+            z.object({
+                day: z.string(),
+                times: z.array(z.string()),
+            })
+        ).optional()
+    ),
+    reviews: z.preprocess(
+        (value) => parseJsonArray(value),
+        z.array(
+            z.object({
+                reviewerId: z.string().optional(),
+                name: z.string(),
+                detail: z.string(),
+                profileImage: z.string().optional(),
+                quote: z.string(),
+                rating: z.coerce.number().min(1).max(5).optional(),
+            })
+        ).optional()
+    ),
+    role: z.enum(["admin", "user", "tutor"]).optional(),
+    tutorOrigin: z.enum(["admin", "self"]).optional(),
+});
 export type UpdateUserDto = z.infer<typeof UpdateUserDto>;
 
 // =========================
