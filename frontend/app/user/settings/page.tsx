@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { changePassword } from "@/lib/api/auth";
+
+const clearClientAuthCookies = () => {
+  document.cookie = "auth_token=; Max-Age=0; path=/";
+  document.cookie = "user_data=; Max-Age=0; path=/";
+};
 
 type SettingsState = {
   emailNotifications: boolean;
@@ -19,6 +25,7 @@ const defaultSettings: SettingsState = {
 };
 
 export default function UserSettingsPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<SettingsState>(defaultSettings);
   const [message, setMessage] = useState("");
   const [passwordMessage, setPasswordMessage] = useState("");
@@ -69,8 +76,13 @@ export default function UserSettingsPage() {
         throw new Error(result?.message || "Failed to change password");
       }
 
-      setPasswordMessage("Password changed successfully.");
+      clearClientAuthCookies();
+      setPasswordMessage("Password changed successfully. Please login again.");
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+
+      setTimeout(() => {
+        router.replace("/login");
+      }, 1000);
     } catch (error: Error | any) {
       setPasswordMessage(error.message || "Failed to change password");
     } finally {
