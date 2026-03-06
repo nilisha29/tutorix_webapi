@@ -158,7 +158,7 @@ async function startServer() {
             // '0.0.0.0',
             () => {
                 console.log(`Server running at http://localhost:${PORT}`);
-                // console.log(`Access from LAN at http://192.168.1.12:${PORT}`);
+                // console.log(`Access from LAN at http://192.168.1.7:${PORT}`);
             }
         );
     } catch (error) {
