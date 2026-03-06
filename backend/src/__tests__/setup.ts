@@ -6,7 +6,6 @@ beforeAll(async () => {
     await connectDatabase();
 });
 
-
 afterAll(async () => {
     await mongoose.connection.close();
 });
